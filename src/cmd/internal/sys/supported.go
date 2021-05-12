@@ -39,13 +39,11 @@ func MSanSupported(goos, goarch string) bool {
 func MustLinkExternal(goos, goarch string) bool {
 	switch goos {
 	case "android":
-		if goarch != "arm64" {
-			return true
-		}
+		return goarch != "arm64"
 	case "ios":
-		if goarch == "arm64" {
-			return true
-		}
+		return goarch == "arm64"
+	case "openbsd":
+		return goarch == "mips64"
 	}
 	return false
 }

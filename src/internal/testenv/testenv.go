@@ -198,13 +198,11 @@ func MustHaveCGO(t testing.TB) {
 func CanInternalLink() bool {
 	switch runtime.GOOS {
 	case "android":
-		if runtime.GOARCH != "arm64" {
-			return false
-		}
+		return runtime.GOARCH == "arm64"
 	case "ios":
-		if runtime.GOARCH == "arm64" {
-			return false
-		}
+		return runtime.GOARCH != "arm64"
+	case "openbsd":
+		return runtime.GOARCH != "mips64"
 	}
 	return true
 }
