@@ -480,9 +480,12 @@ TEXT ·cgocallback(SB),NOSPLIT,$24-24
 	NO_LOCAL_POINTERS
 
 	// Load m and g from thread-local storage.
+#ifndef GOOS_openbsd
 	MOVB	runtime·iscgo(SB), R1
 	BEQ	R1, nocgo
+#endif
 	JAL	runtime·load_g(SB)
+
 nocgo:
 
 	// If g is nil, Go did not create the current thread.

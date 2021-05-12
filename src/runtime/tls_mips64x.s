@@ -14,8 +14,10 @@
 //
 // NOTE: mcall() assumes this clobbers only R23 (REGTMP).
 TEXT runtime·save_g(SB),NOSPLIT|NOFRAME,$0-0
+#ifndef GOOS_openbsd
 	MOVB	runtime·iscgo(SB), R23
 	BEQ	R23, nocgo
+#endif
 
 	MOVV	R3, R23	// save R3
 	MOVV	g, runtime·tls_g(SB) // TLS relocation clobbers R3

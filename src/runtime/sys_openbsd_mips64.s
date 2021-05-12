@@ -1,10 +1,11 @@
 // Copyright 2020 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-
 //
 // System calls and other sys.stuff for mips64, OpenBSD
-// /usr/src/sys/kern/syscalls.master for syscall numbers.
+// System calls are implemented in libc/libpthread, this file
+// contains trampolines that convert from Go to C calling convention.
+// Some direct system call implementations currently remain.
 //
 
 #include "go_asm.h"
@@ -13,6 +14,143 @@
 
 #define CLOCK_REALTIME	$0
 #define	CLOCK_MONOTONIC	$3
+
+// mstart_stub is the first function executed on a new thread started by pthread_create.
+// It just does some low-level setup and then calls mstart.
+// Note: called with the C calling convention.
+TEXT runtime·mstart_stub(SB),NOSPLIT,$160
+	// R4 points to the m.
+	// We are already on m's g0 stack.
+
+	// initialize REGSB = PC&0xffffffff00000000
+	BGEZAL	R0, 1(PC)
+	SRLV	$32, R31, RSB
+	SLLV	$32, RSB
+
+	// Save callee-save registers (R16..R23, R30, F24..F31).
+	MOVV	R16, (1*8)(R29)
+	MOVV	R17, (2*8)(R29)
+	MOVV	R18, (3*8)(R29)
+	MOVV	R19, (4*8)(R29)
+	MOVV	R20, (5*8)(R29)
+	MOVV	R21, (6*8)(R29)
+	MOVV	R22, (7*8)(R29)
+	MOVV	R23, (8*8)(R29)
+	MOVV	g, (10*8)(R29)
+	MOVF	F24, (11*8)(R29)
+	MOVF	F25, (12*8)(R29)
+	MOVF	F26, (13*8)(R29)
+	MOVF	F27, (14*8)(R29)
+	MOVF	F28, (15*8)(R29)
+	MOVF	F29, (16*8)(R29)
+	MOVF	F30, (17*8)(R29)
+	MOVF	F31, (18*8)(R29)
+
+	MOVV	m_g0(R4), g
+	CALL	runtime·save_g(SB)
+
+	CALL	runtime·mstart(SB)
+
+	// Restore callee-save registers.
+	MOVV	(1*8)(R29), R16
+	MOVV	(2*8)(R29), R17
+	MOVV	(3*8)(R29), R18
+	MOVV	(4*8)(R29), R19
+	MOVV	(5*8)(R29), R20
+	MOVV	(6*8)(R29), R21
+	MOVV	(7*8)(R29), R22
+	MOVV	(8*8)(R29), R23
+	MOVV	(10*8)(R29), g
+	MOVF	(11*8)(R29), F24
+	MOVF	(12*8)(R29), F25
+	MOVF	(13*8)(R29), F26
+	MOVF	(14*8)(R29), F27
+	MOVF	(15*8)(R29), F28
+	MOVF	(16*8)(R29), F29
+	MOVF	(17*8)(R29), F30
+	MOVF	(18*8)(R29), F31
+
+	// Go is all done with this OS thread.
+	// Tell pthread everything is ok (we never join with this thread, so
+	// the value here doesn't really matter).
+	MOVV	$0, R0
+
+	RET
+
+TEXT runtime·sigfwd(SB),NOSPLIT,$0-32
+	MOVW	sig+8(FP), R4
+	MOVV	info+16(FP), R5
+	MOVV	ctx+24(FP), R6
+	MOVV	fn+0(FP), R25		// Must use R25, needed for PIC code.
+	CALL	(R25)
+	RET
+
+TEXT runtime·sigtramp(SB),NOSPLIT,$64
+	// initialize REGSB = PC&0xffffffff00000000
+	BGEZAL	R0, 1(PC)
+	SRLV	$32, R31, RSB
+	SLLV	$32, RSB
+
+	// TODO(jsing): This should save/restore callee-save registers.
+
+	// this might be called in external code context,
+	// where g is not set.
+	JAL	runtime·load_g(SB)
+
+	MOVW	R4, 8(R29)
+	MOVV	R5, 16(R29)
+	MOVV	R6, 24(R29)
+	MOVV	$runtime·sigtrampgo(SB), R1
+	JAL	(R1)
+	RET
+
+//
+// These trampolines help convert from Go calling convention to C calling convention.
+// They should be called with asmcgocall.
+// A pointer to the arguments is passed in R0.
+// A single int32 result is returned in R0.
+// (For more results, make an args/results structure.)
+TEXT runtime·pthread_attr_init_trampoline(SB),NOSPLIT,$8
+	MOVV	RSB, 8(R29)
+	MOVV	0(R4), R4		// arg 1 - attr
+	CALL	libc_pthread_attr_init(SB)
+	MOVV	8(R29), RSB
+	RET
+
+TEXT runtime·pthread_attr_destroy_trampoline(SB),NOSPLIT,$8
+	MOVV	RSB, 8(R29)
+	MOVV	0(R4), R4		// arg 1 - attr
+	CALL	libc_pthread_attr_destroy(SB)
+	MOVV	8(R29), RSB
+	RET
+
+TEXT runtime·pthread_attr_getstacksize_trampoline(SB),NOSPLIT,$8
+	MOVV	RSB, 8(R29)
+	MOVV	8(R4), R5		// arg 2 - size
+	MOVV	0(R4), R4		// arg 1 - attr
+	CALL	libc_pthread_attr_getstacksize(SB)
+	MOVV	8(R29), RSB
+	RET
+
+TEXT runtime·pthread_attr_setdetachstate_trampoline(SB),NOSPLIT,$8
+	MOVV	RSB, 8(R29)
+	MOVV	8(R4), R5		// arg 2 - state
+	MOVV	0(R4), R4		// arg 1 - attr
+	CALL	libc_pthread_attr_setdetachstate(SB)
+	MOVV	8(R29), RSB
+	RET
+
+TEXT runtime·pthread_create_trampoline(SB),NOSPLIT,$8
+	MOVV	RSB, 8(R29)
+	MOVV	0(R4), R5		// arg 2 - attr
+	MOVV	8(R4), R6		// arg 3 - start
+	MOVV	16(R4), R7		// arg 4 - arg
+	ADDV	$-16, R29
+	MOVV	R29, R4			// arg 1 - &threadid (discard)
+	CALL	libc_pthread_create(SB)
+	ADDV	$16, R29
+	MOVV	8(R29), RSB
+	RET
 
 // Exit the entire program (like C exit)
 TEXT runtime·exit(SB),NOSPLIT|NOFRAME,$0
@@ -238,69 +376,6 @@ TEXT runtime·obsdsigprocmask(SB),NOSPLIT,$0
 	MOVV	$3, R2			// crash on syscall failure
 	MOVV	R2, (R2)
 	MOVW	R2, ret+8(FP)
-	RET
-
-TEXT runtime·sigfwd(SB),NOSPLIT,$0-32
-	MOVW	sig+8(FP), R4
-	MOVV	info+16(FP), R5
-	MOVV	ctx+24(FP), R6
-	MOVV	fn+0(FP), R25		// Must use R25, needed for PIC code.
-	CALL	(R25)
-	RET
-
-TEXT runtime·sigtramp(SB),NOSPLIT,$192
-	// initialize REGSB = PC&0xffffffff00000000
-	BGEZAL	R0, 1(PC)
-	SRLV	$32, R31, RSB
-	SLLV	$32, RSB
-
-	// this might be called in external code context,
-	// where g is not set.
-	MOVB	runtime·iscgo(SB), R1
-	BEQ	R1, 2(PC)
-	JAL	runtime·load_g(SB)
-
-	MOVW	R4, 8(R29)
-	MOVV	R5, 16(R29)
-	MOVV	R6, 24(R29)
-	MOVV	$runtime·sigtrampgo(SB), R1
-	JAL	(R1)
-	RET
-
-// int32 tfork(void *param, uintptr psize, M *mp, G *gp, void (*fn)(void));
-TEXT runtime·tfork(SB),NOSPLIT,$0
-
-	// Copy mp, gp and fn off parent stack for use by child.
-	MOVV	mm+16(FP), R16
-	MOVV	gg+24(FP), R17
-	MOVV	fn+32(FP), R18
-
-	MOVV	param+0(FP), R4		// arg 1 - param
-	MOVV	psize+8(FP), R5		// arg 2 - psize
-	MOVV	$8, R2			// sys___tfork
-	SYSCALL
-
-	// Return if syscall failed.
-	BEQ	R7, 4(PC)
-	SUBVU	R2, R0, R2		// caller expects negative errno
-	MOVW	R2, ret+40(FP)
-	RET
-
-	// In parent, return.
-	BEQ	R2, 3(PC)
-	MOVW	R2, ret+40(FP)
-	RET
-
-	// Initialise m, g.
-	MOVV	R17, g
-	MOVV	R16, g_m(g)
-
-	// Call fn.
-	CALL	(R18)
-
-	// fn should never return.
-	MOVV	$2, R8			// crash if reached
-	MOVV	R8, (R8)
 	RET
 
 TEXT runtime·sigaltstack(SB),NOSPLIT,$0
