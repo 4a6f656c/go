@@ -56,6 +56,8 @@ func Init() (*sys.Arch, ld.Arch) {
 		Elfreloc1:        elfreloc1,
 		ElfrelocSize:     24,
 		Elfsetupplt:      elfsetupplt,
+		Trampoline:       trampoline,
+		TrampLimit:	  1,
 		Gentext:          gentext,
 		Machoreloc1:      machoreloc1,
 

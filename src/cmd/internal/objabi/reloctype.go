@@ -238,6 +238,11 @@ const (
 	// TODO(mundaym): remove once variants can be serialized - see issue 14218.
 	R_PCRELDBL
 
+	R_MIPSGPRELHI
+	R_MIPSGPRELLO
+	R_MIPSCALL16
+	R_MIPSJALR
+
 	// R_ADDRMIPSU (only used on mips/mips64) resolves to the sign-adjusted "upper" 16
 	// bits (bit 16-31) of an external address, by encoding it into the instruction.
 	R_ADDRMIPSU
