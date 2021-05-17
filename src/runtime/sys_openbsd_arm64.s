@@ -270,14 +270,14 @@ TEXT runtime·open_trampoline(SB),NOSPLIT,$0
 	RET
 
 TEXT runtime·close_trampoline(SB),NOSPLIT,$0
-	MOVD	0(R0), R0		// arg 1 - fd
+	MOVW	0(R0), R0		// arg 1 - fd
 	CALL	libc_close(SB)
 	RET
 
 TEXT runtime·read_trampoline(SB),NOSPLIT,$0
 	MOVD	8(R0), R1		// arg 2 - buf
 	MOVW	16(R0), R2		// arg 3 - count
-	MOVW	0(R0), R0		// arg 1 - fd
+	MOVW	0(R0), R0		// arg 1 - fd (int32 from read)
 	CALL	libc_read(SB)
 	CMP	$-1, R0
 	BNE	noerr
@@ -290,7 +290,7 @@ noerr:
 TEXT runtime·write_trampoline(SB),NOSPLIT,$0
 	MOVD	8(R0), R1		// arg 2 - buf
 	MOVW	16(R0), R2		// arg 3 - count
-	MOVW	0(R0), R0		// arg 1 - fd
+	MOVD	0(R0), R0		// arg 1 - fd (uintptr from write1)
 	CALL	libc_write(SB)
 	CMP	$-1, R0
 	BNE	noerr
@@ -320,7 +320,7 @@ TEXT runtime·setitimer_trampoline(SB),NOSPLIT,$0
 	RET
 
 TEXT runtime·usleep_trampoline(SB),NOSPLIT,$0
-	MOVD	0(R0), R0		// arg 1 - usec
+	MOVW	0(R0), R0		// arg 1 - usec
 	CALL	libc_usleep(SB)
 	RET
 
@@ -356,7 +356,7 @@ noerr:
 
 TEXT runtime·clock_gettime_trampoline(SB),NOSPLIT,$0
 	MOVD	8(R0), R1		// arg 2 - tp
-	MOVD	0(R0), R0		// arg 1 - clock_id
+	MOVW	0(R0), R0		// arg 1 - clock_id
 	CALL	libc_clock_gettime(SB)
 	CMP	$-1, R0
 	BNE	3(PC)

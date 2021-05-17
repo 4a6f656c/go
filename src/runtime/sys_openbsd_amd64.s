@@ -264,7 +264,7 @@ TEXT runtime·read_trampoline(SB),NOSPLIT,$0
 	MOVQ	SP, BP
 	MOVQ	8(DI), SI		// arg 2 - buf
 	MOVL	16(DI), DX		// arg 3 - count
-	MOVL	0(DI), DI		// arg 1 - fd
+	MOVL	0(DI), DI		// arg 1 - fd (int32 from read)
 	CALL	libc_read(SB)
 	TESTL	AX, AX
 	JGE	noerr
@@ -280,7 +280,7 @@ TEXT runtime·write_trampoline(SB),NOSPLIT,$0
 	MOVQ	SP, BP
 	MOVQ	8(DI), SI		// arg 2 buf
 	MOVL	16(DI), DX		// arg 3 count
-	MOVL	0(DI), DI		// arg 1 fd
+	MOVQ	0(DI), DI		// arg 1 fd (uintptr from write1)
 	CALL	libc_write(SB)
 	TESTL	AX, AX
 	JGE	noerr
