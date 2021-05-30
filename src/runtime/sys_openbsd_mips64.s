@@ -85,13 +85,33 @@ TEXT runtime·sigfwd(SB),NOSPLIT,$0-32
 	CALL	(R25)
 	RET
 
-TEXT runtime·sigtramp(SB),NOSPLIT,$64
+TEXT runtime·sigtramp(SB),NOSPLIT,$176
+	// Save callee-save registers (R16..R23, R30, F24..F31).
+	MOVV	R16, (4*8)(R29)
+	MOVV	R17, (5*8)(R29)
+	MOVV	R18, (6*8)(R29)
+	MOVV	R19, (7*8)(R29)
+	MOVV	R20, (8*8)(R29)
+	MOVV	R21, (9*8)(R29)
+	MOVV	R22, (10*8)(R29)
+	MOVV	R23, (11*8)(R29)
+	MOVV	g,   (12*8)(R29)
+	MOVF	F24, (13*8)(R29)
+	MOVF	F25, (14*8)(R29)
+	MOVF	F26, (15*8)(R29)
+	MOVF	F27, (16*8)(R29)
+	MOVF	F28, (17*8)(R29)
+	MOVF	F29, (18*8)(R29)
+	MOVF	F30, (19*8)(R29)
+	MOVF	F31, (20*8)(R29)
+
+	// Preserve RSB (aka gp)
+	MOVV	RSB, (21*8)(R29)
+
 	// initialize REGSB = PC&0xffffffff00000000
 	BGEZAL	R0, 1(PC)
 	SRLV	$32, R31, RSB
 	SLLV	$32, RSB
-
-	// TODO(jsing): This should save/restore callee-save registers.
 
 	// this might be called in external code context,
 	// where g is not set.
@@ -102,6 +122,29 @@ TEXT runtime·sigtramp(SB),NOSPLIT,$64
 	MOVV	R6, 24(R29)
 	MOVV	$runtime·sigtrampgo(SB), R1
 	JAL	(R1)
+
+	// Restore callee-save registers.
+	MOVV	(4*8)(R29), R16
+	MOVV	(5*8)(R29), R17
+	MOVV	(6*8)(R29), R18
+	MOVV	(7*8)(R29), R19
+	MOVV	(8*8)(R29), R20
+	MOVV	(9*8)(R29), R21
+	MOVV	(10*8)(R29), R22
+	MOVV	(11*8)(R29), R23
+	MOVV	(12*8)(R29), g
+	MOVF	(13*8)(R29), F24
+	MOVF	(14*8)(R29), F25
+	MOVF	(15*8)(R29), F26
+	MOVF	(16*8)(R29), F27
+	MOVF	(17*8)(R29), F28
+	MOVF	(18*8)(R29), F29
+	MOVF	(19*8)(R29), F30
+	MOVF	(20*8)(R29), F31
+
+	// Restore RSB (aka gp)
+	MOVV	(21*8)(R29), RSB
+
 	RET
 
 //
