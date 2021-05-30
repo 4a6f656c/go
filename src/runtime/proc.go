@@ -1300,10 +1300,8 @@ func startTheWorldWithSema(emitTraceEvent bool) int64 {
 // via libcall.
 func usesLibcall() bool {
 	switch GOOS {
-	case "aix", "darwin", "illumos", "ios", "solaris", "windows":
+	case "aix", "darwin", "illumos", "ios", "openbsd", "solaris", "windows":
 		return true
-	case "openbsd":
-		return GOARCH == "386" || GOARCH == "amd64" || GOARCH == "arm" || GOARCH == "arm64"
 	}
 	return false
 }

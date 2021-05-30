@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//go:build openbsd && !mips64
-// +build openbsd,!mips64
+//go:build openbsd
+// +build openbsd
 
 package runtime
 
@@ -36,6 +36,8 @@ func raiseproc_trampoline()
 //go:nosplit
 //go:cgo_unsafe_args
 func thrkill(tid int32, sig int) {
+	// TODO(jsing): sig should really be uint32 rather than a Go int,
+	// which switches between int32 and int64 depending on arch.
 	libcCall(unsafe.Pointer(funcPC(thrkill_trampoline)), unsafe.Pointer(&tid))
 }
 func thrkill_trampoline()
