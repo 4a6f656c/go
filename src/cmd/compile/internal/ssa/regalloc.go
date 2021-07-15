@@ -619,6 +619,8 @@ func (s *regAllocState) init(f *Func) {
 			// we do need to be careful, but that carefulness is hidden
 			// in the rewrite rules so we always have a free register
 			// available for global load/stores. See gen/386.rules (search for Flag_shared).
+		case "riscv64": // X4 (aka TP) already reserved.
+			s.allocatable &^= 1 << 3 // X3 (aka GP)
 		case "s390x":
 			s.allocatable &^= 1 << 11 // R11
 		default:
