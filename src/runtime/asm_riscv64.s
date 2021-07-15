@@ -356,6 +356,9 @@ g0:
 	SUB	X8, X9, X8
 	MOV	X8, 8(X2)	// save depth in old g stack (can't just save SP, as stack might be copied during a callback)
 
+	// Reload GP before calling C code.
+	MOV	$runtime·gp+0(SB), X8
+	MOV	(X8), GP
 	JALR	RA, (X5)
 
 	// Restore g, stack pointer. X10 is return value.

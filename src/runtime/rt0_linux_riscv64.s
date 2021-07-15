@@ -10,5 +10,10 @@ TEXT _rt0_riscv64_linux(SB),NOSPLIT|NOFRAME,$0
 	JMP	main(SB)
 
 TEXT main(SB),NOSPLIT|NOFRAME,$0
+	MOV	$runtime·gp+0(SB), T0
+	MOV	GP, (T0)
 	MOV	$runtime·rt0_go(SB), T0
 	JALR	ZERO, T0
+
+DATA	runtime·gp+0(SB)/8,$0
+GLOBL	runtime·gp(SB),NOPTR,$8
