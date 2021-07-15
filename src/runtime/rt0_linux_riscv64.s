@@ -47,8 +47,10 @@ TEXT _rt0_riscv64_linux_lib(SB),NOSPLIT,$240
 	// Initialize g as null in case of using g later e.g. sigaction in cgo_sigaction.go
 	MOV	X0, g
 
-	MOV	A0, _rt0_riscv64_linux_lib_argc<>(SB)
-	MOV	A1, _rt0_riscv64_linux_lib_argv<>(SB)
+	MOV	$_rt0_riscv64_linux_lib_argc<>(SB), T0
+	MOV	A0, (T0)
+	MOV	$_rt0_riscv64_linux_lib_argv<>(SB), T0
+	MOV	A1, (T0)
 
 	// Synchronous initialization.
 	MOV	$runtime·libpreinit(SB), T0
@@ -109,8 +111,10 @@ restore:
 	RET
 
 TEXT _rt0_riscv64_linux_lib_go(SB),NOSPLIT,$0
-	MOV	_rt0_riscv64_linux_lib_argc<>(SB), A0
-	MOV	_rt0_riscv64_linux_lib_argv<>(SB), A1
+	MOV	$_rt0_riscv64_linux_lib_argc<>(SB), A0
+	MOV	(A0), A0
+	MOV	$_rt0_riscv64_linux_lib_argv<>(SB), A1
+	MOV	(A1), A1
 	MOV	$runtime·rt0_go(SB), T0
 	JALR	ZERO, T0
 
