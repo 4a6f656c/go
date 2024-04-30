@@ -114,17 +114,6 @@ func adddynrel(target *ld.Target, ldr *loader.Loader, syms *ld.ArchSyms, s loade
 		su.SetRelocType(rIdx, objabi.R_RISCV_BRANCH)
 		return true
 
-	case objabi.ElfRelocOffset + objabi.RelocType(elf.R_RISCV_JAL):
-		su := ldr.MakeSymbolUpdater(s)
-		su.SetRelocType(rIdx, objabi.R_RISCV_JAL)
-		return true
-
-	case objabi.ElfRelocOffset + objabi.RelocType(elf.R_RISCV_ADD32):
-		return true
-
-	case objabi.ElfRelocOffset + objabi.RelocType(elf.R_RISCV_SUB32):
-		return true
-
 	case objabi.ElfRelocOffset + objabi.RelocType(elf.R_RISCV_RELAX):
 		// Ignore relaxations, at least for now.
 		return true

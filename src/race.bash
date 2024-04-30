@@ -19,7 +19,7 @@ case $(uname -s -m) in
   "Linux x86_64")  ;;
   "Linux ppc64le") ;;
   "Linux aarch64") ;;
-  "Linux riscv64")   ;;
+  "Linux riscv64") ;;
   "Linux s390x")   ;;
   "FreeBSD amd64") ;;
   "NetBSD amd64")  ;;
