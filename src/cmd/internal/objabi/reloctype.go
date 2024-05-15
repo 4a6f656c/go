@@ -303,8 +303,16 @@ const (
 	// address using an S-type instruction.
 	R_RISCV_PCREL_LO12_S
 
+	R_RISCV_32_PCREL
+
+	R_RISCV_64
+
 	// R_RISCV_BRANCH resolves a 12-bit PC-relative branch offset.
 	R_RISCV_BRANCH
+
+	R_RISCV_ADD32
+
+	R_RISCV_SUB32
 
 	// R_RISCV_RVC_BRANCH resolves an 8-bit PC-relative offset for a CB-type
 	// instruction.
