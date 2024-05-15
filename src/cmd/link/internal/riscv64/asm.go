@@ -99,6 +99,26 @@ func adddynrel(target *ld.Target, ldr *loader.Loader, syms *ld.ArchSyms, s loade
 		su.SetRelocType(rIdx, objabi.R_RISCV_PCREL_LO12_S)
 		return true
 
+	case objabi.ElfRelocOffset + objabi.RelocType(elf.R_RISCV_32_PCREL):
+		su := ldr.MakeSymbolUpdater(s)
+		su.SetRelocType(rIdx, objabi.R_RISCV_32_PCREL)
+		return true
+
+	case objabi.ElfRelocOffset + objabi.RelocType(elf.R_RISCV_64):
+		su := ldr.MakeSymbolUpdater(s)
+		su.SetRelocType(rIdx, objabi.R_RISCV_64)
+		return true
+
+	case objabi.ElfRelocOffset + objabi.RelocType(elf.R_RISCV_ADD32):
+		su := ldr.MakeSymbolUpdater(s)
+		su.SetRelocType(rIdx, objabi.R_RISCV_ADD32)
+		return true
+
+	case objabi.ElfRelocOffset + objabi.RelocType(elf.R_RISCV_SUB32):
+		su := ldr.MakeSymbolUpdater(s)
+		su.SetRelocType(rIdx, objabi.R_RISCV_SUB32)
+		return true
+
 	case objabi.ElfRelocOffset + objabi.RelocType(elf.R_RISCV_RVC_BRANCH):
 		su := ldr.MakeSymbolUpdater(s)
 		su.SetRelocType(rIdx, objabi.R_RISCV_RVC_BRANCH)
@@ -611,6 +631,23 @@ func archreloc(target *ld.Target, ldr *loader.Loader, syms *ld.ArchSyms, r loade
 		second = (second &^ secondImmMask) | int64(uint32(secondImm))
 
 		return second<<32 | auipc, 0, true
+
+	case objabi.R_RISCV_32_PCREL:
+		pc := ldr.SymValue(s) + int64(r.Off())
+		off := ldr.SymValue(rs) + r.Add() - pc
+		return int64(uint32(off)), 0, true
+
+	case objabi.R_RISCV_64:
+		addr := ldr.SymValue(rs) + r.Add()
+		return addr, 0, true
+
+	case objabi.R_RISCV_ADD32:
+		addr := val + ldr.SymValue(rs) + r.Add()
+		return int64(uint32(addr)), 0, true
+
+	case objabi.R_RISCV_SUB32:
+		addr := val - ldr.SymValue(rs) - r.Add()
+		return int64(uint32(addr)), 0, true
 	}
 
 	return val, 0, false
