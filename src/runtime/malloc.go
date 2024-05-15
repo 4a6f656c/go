@@ -694,11 +694,13 @@ func (h *mheap) sysAlloc(n uintptr, hintList **arenaHint, register bool) (v unsa
 	}
 
 	if size == 0 {
-		if raceenabled {
+		if raceenabled && GOOS != "riscv64" {
 			// The race detector assumes the heap lives in
 			// [0x00c000000000, 0x00e000000000), but we
 			// just ran out of hints in this region. Give
-			// a nice failure.
+			// a nice failure. This does not hold true for
+			// TSAN on riscv64, in which case the heap is
+			// not tracked.
 			throw("too many address space collisions for -race mode")
 		}
 
