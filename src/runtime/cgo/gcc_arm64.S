@@ -26,6 +26,7 @@
  */
 .globl EXT(crosscall1)
 EXT(crosscall1):
+	bti c
 	.cfi_startproc
 	stp x29, x30, [sp, #-96]!
 	.cfi_def_cfa_offset 96

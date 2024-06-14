@@ -145,7 +145,9 @@ func computeDeferReturn(ctxt *Link, deferReturnSym, s loader.Sym) uint32 {
 				switch target.Arch.Family {
 				case sys.AMD64, sys.I386:
 					deferreturn--
-				case sys.ARM, sys.ARM64, sys.Loong64, sys.MIPS, sys.MIPS64, sys.PPC64, sys.RISCV64:
+				case sys.ARM64:
+					deferreturn -= 4 // bti before call
+				case sys.ARM, sys.Loong64, sys.MIPS, sys.MIPS64, sys.PPC64, sys.RISCV64:
 					// no change
 				case sys.S390X:
 					deferreturn -= 2

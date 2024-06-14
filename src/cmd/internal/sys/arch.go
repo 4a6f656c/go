@@ -130,7 +130,7 @@ var ArchARM64 = &Arch{
 	MinLC:          4,
 	Alignment:      1,
 	CanMergeLoads:  true,
-	CanJumpTable:   true,
+	CanJumpTable:   false,
 	HasLR:          true,
 	FixedFrameSize: 8, // LR
 }

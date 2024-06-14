@@ -1093,6 +1093,9 @@ func extreloc(target *ld.Target, ldr *loader.Loader, r loader.Reloc, s loader.Sy
 
 func elfsetupplt(ctxt *ld.Link, ldr *loader.Loader, plt, gotplt *loader.SymbolBuilder, dynamic loader.Sym) {
 	if plt.Size() == 0 {
+		// bti c
+		plt.AddUint32(ctxt.Arch, 0xd503245f)
+
 		// stp     x16, x30, [sp, #-16]!
 		// identifying information
 		plt.AddUint32(ctxt.Arch, 0xa9bf7bf0)
@@ -1145,6 +1148,9 @@ func addpltsym(target *ld.Target, ldr *loader.Loader, syms *ld.ArchSyms, s loade
 			panic("plt is not set up")
 		}
 
+		// bti c
+		plt.AddUint32(target.Arch, 0xd503245f)
+
 		// adrp    x16, &got.plt[0]
 		plt.AddAddrPlus4(target.Arch, gotplt.Sym(), gotplt.Size())
 		plt.SetUint32(target.Arch, plt.Size()-4, 0x90000010)
@@ -1177,7 +1183,7 @@ func addpltsym(target *ld.Target, ldr *loader.Loader, syms *ld.ArchSyms, s loade
 		rela.AddUint64(target.Arch, elf.R_INFO(uint32(sDynid), uint32(elf.R_AARCH64_JUMP_SLOT)))
 		rela.AddUint64(target.Arch, 0)
 
-		ldr.SetPlt(s, int32(plt.Size()-16))
+		ldr.SetPlt(s, int32(plt.Size()-20))
 	} else if target.IsDarwin() {
 		ld.AddGotSym(target, ldr, syms, s, 0)
 

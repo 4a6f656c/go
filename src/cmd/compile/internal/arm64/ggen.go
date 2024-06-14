@@ -10,7 +10,10 @@ import (
 	"cmd/compile/internal/types"
 	"cmd/internal/obj"
 	"cmd/internal/obj/arm64"
+	"internal/buildcfg"
 )
+
+var isOpenBSD = buildcfg.GOOS == "openbsd"
 
 func padframe(frame int64) int64 {
 	// arm64 requires that the frame size (not counting saved FP&LR)
@@ -29,7 +32,7 @@ func zerorange(pp *objw.Progs, p *obj.Prog, off, cnt int64, _ *uint32) *obj.Prog
 		for i := int64(0); i < cnt; i += int64(types.PtrSize) {
 			p = pp.Append(p, arm64.AMOVD, obj.TYPE_REG, arm64.REGZERO, 0, obj.TYPE_MEM, arm64.REGSP, 8+off+i)
 		}
-	} else if cnt <= int64(128*types.PtrSize) {
+	} else if !isOpenBSD && cnt <= int64(128*types.PtrSize) {
 		if cnt%(2*int64(types.PtrSize)) != 0 {
 			p = pp.Append(p, arm64.AMOVD, obj.TYPE_REG, arm64.REGZERO, 0, obj.TYPE_MEM, arm64.REGSP, 8+off)
 			off += int64(types.PtrSize)
