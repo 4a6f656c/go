@@ -766,5 +766,9 @@ TEXT asmtest(SB),DUPOK|NOSPLIT,$-8
 	VMOV V0.B[1], R11                                           // 0b3c030e
 	VMOV V1.H[3], R12                                           // 2c3c0e0e
 	VUSHR $6, V22.H8, V23.H8                                    // d7061a6f
+	BTI							    // 1f2403d5
+	BTI C							    // 5f2403d5
+	BTI J							    // 9f2403d5
+	BTI JC							    // df2403d5
 
 	RET
