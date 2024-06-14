@@ -296,6 +296,10 @@ TEXT asmtest(SB),DUPOK|NOSPLIT,$-8
 	RBITW R9, R22                              // 3601c05a
 	RBIT R11, R4                               // 6401c0da
 	RET                                        // c0035fd6
+	RET R0					   // 00005fd6
+	RET R6					   // c0005fd6
+	RET R27					   // 60035fd6
+	RET R30					   // c0035fd6
 	REVW R8, R10                               // 0a09c05a
 	REV R1, R2                                 // 220cc0da
 	REV16W R21, R19                            // b306c05a
