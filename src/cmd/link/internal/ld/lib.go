@@ -1472,7 +1472,7 @@ func (ctxt *Link) hostlink() {
 		if ctxt.BuildMode != BuildModePIE {
 			argv = append(argv, "-Wl,-nopie")
 		}
-		if !ctxt.Arch.InFamily(sys.ARM64) {
+		if !ctxt.Arch.InFamily(sys.ARM64) && !ctxt.Arch.InFamily(sys.AMD64) {
 			if linkerFlagSupported(ctxt.Arch, argv[0], "", "-Wl,-z,nobtcfi") {
 				// -Wl,-z,nobtcfi is only supported on OpenBSD 7.4+, remove guard
 				// when OpenBSD 7.5 is released and 7.3 is no longer supported.

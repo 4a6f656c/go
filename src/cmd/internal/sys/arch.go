@@ -103,7 +103,7 @@ var ArchAMD64 = &Arch{
 	MinLC:          1,
 	Alignment:      1,
 	CanMergeLoads:  true,
-	CanJumpTable:   true,
+	CanJumpTable:   false,
 	HasLR:          false,
 	FixedFrameSize: 0,
 }

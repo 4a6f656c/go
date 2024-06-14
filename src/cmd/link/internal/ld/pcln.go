@@ -143,7 +143,9 @@ func computeDeferReturn(ctxt *Link, deferReturnSym, s loader.Sym) uint32 {
 				// instruction).
 				deferreturn = uint32(r.Off())
 				switch target.Arch.Family {
-				case sys.AMD64, sys.I386:
+				case sys.AMD64:
+					deferreturn -= 5 // four bytes for endbr64, one byte for callq
+				case sys.I386:
 					deferreturn--
 				case sys.ARM64:
 					deferreturn -= 4 // bti before call

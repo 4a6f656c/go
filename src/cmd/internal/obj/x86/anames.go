@@ -199,6 +199,7 @@ var Anames = []string{
 	"DECL",
 	"DECQ",
 	"DECW",
+	"DEFERRET",
 	"DIVB",
 	"DIVL",
 	"DIVPD",

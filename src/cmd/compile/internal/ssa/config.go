@@ -188,6 +188,7 @@ func NewConfig(arch string, types Types, ctxt *obj.Link, optimize, softfloat boo
 		c.haveBswap64 = true
 		c.haveBswap32 = true
 		c.haveBswap16 = true
+		c.noDuffDevice = true
 	case "386":
 		c.PtrSize = 4
 		c.RegSize = 4
