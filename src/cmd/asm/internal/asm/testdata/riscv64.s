@@ -417,6 +417,33 @@ start:
 	BSET	$63, X9					// 9394f42b
 	BSETI	$1, X10, X11				// 93151528
 
+	//
+	// V extension
+	//
+
+	// 31.7.9. Vector Load/Store Whole Register Instructions
+	VL1RE8V		(X10), V3			// 87018502
+	VL1RE16V	(X10), V3			// 87518502
+	VL1RE32V	(X10), V3			// 87618502
+	VL1RE64V	(X10), V3			// 87718502
+	VL2RE8V		(X10), V2			// 07018522
+	VL2RE16V	(X10), V2			// 07518522
+	VL2RE32V	(X10), V2			// 07618522
+	VL2RE64V	(X10), V2			// 07718522
+	VL4RE8V		(X10), V4			// 07028562
+	VL4RE16V	(X10), V4			// 07528562
+	VL4RE32V	(X10), V4			// 07628562
+	VL4RE64V	(X10), V4			// 07728562
+	VL8RE8V		(X10), V8			// 070485e2
+	VL8RE16V	(X10), V8			// 075485e2
+	VL8RE32V	(X10), V8			// 076485e2
+	VL8RE64V	(X10), V8			// 077485e2
+
+	VS1RV		V3, (X11)			// a7818502
+	VS2RV		V2, (X11)			// 27818522
+	VS4RV		V4, (X11)			// 27828562
+	VS8RV		V8, (X11)			// 278485e2
+
 	// Privileged ISA
 
 	// 3.2.1: Environment Call and Breakpoint

@@ -1030,6 +1030,11 @@ func regF(r uint32) uint32 {
 	return regVal(r, REG_F0, REG_F31)
 }
 
+// regV returns a vector register.
+func regV(r uint32) uint32 {
+	return regVal(r, REG_V0, REG_V31)
+}
+
 // regAddr extracts a register from an Addr.
 func regAddr(a obj.Addr, min, max uint32) uint32 {
 	if a.Type != obj.TYPE_REG {
@@ -1112,6 +1117,11 @@ func wantFloatReg(ctxt *obj.Link, ins *instruction, pos string, r uint32) {
 	wantReg(ctxt, ins, pos, "float", r, REG_F0, REG_F31)
 }
 
+// wantVectorReg checks that r is a vector register.
+func wantVectorReg(ctxt *obj.Link, ins *instruction, pos string, r uint32) {
+	wantReg(ctxt, ins, pos, "vector", r, REG_V0, REG_V31)
+}
+
 // wantEvenOffset checks that the offset is a multiple of two.
 func wantEvenOffset(ctxt *obj.Link, ins *instruction, offset int64) {
 	if err := immEven(offset); err != nil {
@@ -1191,6 +1201,14 @@ func validateIF(ctxt *obj.Link, ins *instruction) {
 	wantNoneReg(ctxt, ins, "rs3", ins.rs3)
 }
 
+func validateIV(ctxt *obj.Link, ins *instruction) {
+	wantImmI(ctxt, ins, ins.imm, 12)
+	wantVectorReg(ctxt, ins, "rd", ins.rd)
+	wantIntReg(ctxt, ins, "rs1", ins.rs1)
+	wantNoneReg(ctxt, ins, "rs2", ins.rs2)
+	wantNoneReg(ctxt, ins, "rs3", ins.rs3)
+}
+
 func validateSI(ctxt *obj.Link, ins *instruction) {
 	wantImmI(ctxt, ins, ins.imm, 12)
 	wantIntReg(ctxt, ins, "rd", ins.rd)
@@ -1203,6 +1221,14 @@ func validateSF(ctxt *obj.Link, ins *instruction) {
 	wantImmI(ctxt, ins, ins.imm, 12)
 	wantIntReg(ctxt, ins, "rd", ins.rd)
 	wantFloatReg(ctxt, ins, "rs1", ins.rs1)
+	wantNoneReg(ctxt, ins, "rs2", ins.rs2)
+	wantNoneReg(ctxt, ins, "rs3", ins.rs3)
+}
+
+func validateSV(ctxt *obj.Link, ins *instruction) {
+	wantImmI(ctxt, ins, ins.imm, 12)
+	wantIntReg(ctxt, ins, "rd", ins.rd)
+	wantVectorReg(ctxt, ins, "rs1", ins.rs1)
 	wantNoneReg(ctxt, ins, "rs2", ins.rs2)
 	wantNoneReg(ctxt, ins, "rs3", ins.rs3)
 }
@@ -1260,7 +1286,10 @@ func encodeR(as obj.As, rs1, rs2, rd, funct3, funct7 uint32) uint32 {
 	if enc.rs2 != 0 && rs2 != 0 {
 		panic("encodeR: instruction uses rs2, but rs2 was nonzero")
 	}
-	return funct7<<25 | enc.funct7<<25 | enc.rs2<<20 | rs2<<20 | rs1<<15 | enc.funct3<<12 | funct3<<12 | rd<<7 | enc.opcode
+	funct3 |= enc.funct3
+	funct7 |= enc.funct7
+	rs2 |= enc.rs2
+	return funct7<<25 | rs2<<20 | rs1<<15 | funct3<<12 | rd<<7 | enc.opcode
 }
 
 // encodeR4 encodes an R4-type RISC-V instruction.
@@ -1329,12 +1358,21 @@ func encodeIF(ins *instruction) uint32 {
 	return encodeI(ins.as, regI(ins.rs1), regF(ins.rd), uint32(ins.imm))
 }
 
+func encodeIV(ins *instruction) uint32 {
+	return encodeI(ins.as, regI(ins.rs1), regV(ins.rd), uint32(ins.imm))
+}
+
 // encodeS encodes an S-type RISC-V instruction.
 func encodeS(as obj.As, rs1, rs2, imm uint32) uint32 {
 	enc := encode(as)
 	if enc == nil {
 		panic("encodeS: could not encode instruction")
 	}
+	if enc.rs2 != 0 && rs2 != 0 {
+		panic("encodeS: instruction uses rs2, but rs2 was nonzero")
+	}
+	rs2 |= enc.rs2
+	imm |= uint32(enc.csr) &^ 0x1f
 	return (imm>>5)<<25 | rs2<<20 | rs1<<15 | enc.funct3<<12 | (imm&0x1f)<<7 | enc.opcode
 }
 
@@ -1344,6 +1382,10 @@ func encodeSI(ins *instruction) uint32 {
 
 func encodeSF(ins *instruction) uint32 {
 	return encodeS(ins.as, regI(ins.rd), regF(ins.rs1), uint32(ins.imm))
+}
+
+func encodeSV(ins *instruction) uint32 {
+	return encodeS(ins.as, regI(ins.rd), 0, regV(ins.rs1))
 }
 
 // encodeBImmediate encodes an immediate for a B-type RISC-V instruction.
@@ -1524,9 +1566,11 @@ var (
 
 	iIEncoding = encoding{encode: encodeII, validate: validateII, length: 4}
 	iFEncoding = encoding{encode: encodeIF, validate: validateIF, length: 4}
+	iVEncoding = encoding{encode: encodeIV, validate: validateIV, length: 4}
 
 	sIEncoding = encoding{encode: encodeSI, validate: validateSI, length: 4}
 	sFEncoding = encoding{encode: encodeSF, validate: validateSF, length: 4}
+	sVEncoding = encoding{encode: encodeSV, validate: validateSV, length: 4}
 
 	bEncoding = encoding{encode: encodeB, validate: validateB, length: 4}
 	uEncoding = encoding{encode: encodeU, validate: validateU, length: 4}
@@ -1798,6 +1842,33 @@ var encodings = [ALAST & obj.AMask]encoding{
 	ABINVI & obj.AMask: iIEncoding,
 	ABSET & obj.AMask:  rIIIEncoding,
 	ABSETI & obj.AMask: iIEncoding,
+
+	//
+	//
+	//
+
+	// 31.7.9. Vector Load/Store Whole Register Instructions
+	AVL1RE8V & obj.AMask:  iVEncoding,
+	AVL1RE16V & obj.AMask: iVEncoding,
+	AVL1RE32V & obj.AMask: iVEncoding,
+	AVL1RE64V & obj.AMask: iVEncoding,
+	AVL2RE8V & obj.AMask:  iVEncoding,
+	AVL2RE16V & obj.AMask: iVEncoding,
+	AVL2RE32V & obj.AMask: iVEncoding,
+	AVL2RE64V & obj.AMask: iVEncoding,
+	AVL4RE8V & obj.AMask:  iVEncoding,
+	AVL4RE16V & obj.AMask: iVEncoding,
+	AVL4RE32V & obj.AMask: iVEncoding,
+	AVL4RE64V & obj.AMask: iVEncoding,
+	AVL8RE8V & obj.AMask:  iVEncoding,
+	AVL8RE16V & obj.AMask: iVEncoding,
+	AVL8RE32V & obj.AMask: iVEncoding,
+	AVL8RE64V & obj.AMask: iVEncoding,
+
+	AVS1RV & obj.AMask: sVEncoding,
+	AVS2RV & obj.AMask: sVEncoding,
+	AVS4RV & obj.AMask: sVEncoding,
+	AVS8RV & obj.AMask: sVEncoding,
 
 	// Escape hatch
 	AWORD & obj.AMask: rawEncoding,
@@ -2534,6 +2605,13 @@ func instructionsForProg(p *obj.Prog) []*instruction {
 		ins.rs1, ins.rs2 = uint32(p.From.Reg), obj.REG_NONE
 
 	case AORCB, AREV8:
+		ins.rd, ins.rs1, ins.rs2 = uint32(p.To.Reg), uint32(p.From.Reg), obj.REG_NONE
+
+	case AVL1RE8V, AVL1RE16V, AVL1RE32V, AVL1RE64V, AVL2RE8V, AVL2RE16V, AVL2RE32V, AVL2RE64V,
+		AVL4RE8V, AVL4RE16V, AVL4RE32V, AVL4RE64V, AVL8RE8V, AVL8RE16V, AVL8RE32V, AVL8RE64V:
+		ins.rd, ins.rs1, ins.rs2 = uint32(p.To.Reg), uint32(p.From.Reg), obj.REG_NONE
+
+	case AVS1RV, AVS2RV, AVS4RV, AVS8RV:
 		ins.rd, ins.rs1, ins.rs2 = uint32(p.To.Reg), uint32(p.From.Reg), obj.REG_NONE
 	}
 
