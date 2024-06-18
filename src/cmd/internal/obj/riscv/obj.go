@@ -1062,19 +1062,27 @@ func immEven(x int64) error {
 	return nil
 }
 
+func immFits(x int64, nbits uint, signed bool) error {
+	label := "unsigned"
+	min, max := int64(0), int64(1)<<nbits-1
+	if signed {
+		label = "signed"
+		sbits := nbits - 1
+		min, max = int64(-1)<<sbits, int64(1)<<sbits-1
+	}
+	if x < min || x > max {
+		if nbits <= 16 {
+			return fmt.Errorf("%s immediate %d must be in range [%d, %d] (%d bits)", label, x, min, max, nbits)
+		}
+		return fmt.Errorf("%s immediate %#x must be in range [%#x, %#x] (%d bits)", label, x, min, max, nbits)
+	}
+	return nil
+}
+
 // immIFits checks whether the immediate value x fits in nbits bits
 // as a signed integer. If it does not, an error is returned.
 func immIFits(x int64, nbits uint) error {
-	sbits := nbits - 1
-	min := int64(-1) << sbits
-	max := int64(1)<<sbits - 1
-	if x < min || x > max {
-		if nbits <= 16 {
-			return fmt.Errorf("signed immediate %d must be in range [%d, %d] (%d bits)", x, min, max, nbits)
-		}
-		return fmt.Errorf("signed immediate %#x must be in range [%#x, %#x] (%d bits)", x, min, max, nbits)
-	}
-	return nil
+	return immFits(x, nbits, true)
 }
 
 // immI extracts the signed integer of the specified size from an immediate.
@@ -1087,6 +1095,26 @@ func immI(as obj.As, imm int64, nbits uint) uint32 {
 
 func wantImmI(ctxt *obj.Link, ins *instruction, imm int64, nbits uint) {
 	if err := immIFits(imm, nbits); err != nil {
+		ctxt.Diag("%v: %v", ins, err)
+	}
+}
+
+// immUFits checks whether the immediate value x fits in nbits bits
+// as an unsigned integer. If it does not, an error is returned.
+func immUFits(x int64, nbits uint) error {
+	return immFits(x, nbits, false)
+}
+
+// immU extracts the unsigned integer of the specified size from an immediate.
+func immU(as obj.As, imm int64, nbits uint) uint32 {
+	if err := immUFits(imm, nbits); err != nil {
+		panic(fmt.Sprintf("%v: %v", as, err))
+	}
+	return uint32(imm) & ((1 << nbits) - 1)
+}
+
+func wantImmU(ctxt *obj.Link, ins *instruction, imm int64, nbits uint) {
+	if err := immUFits(imm, nbits); err != nil {
 		ctxt.Diag("%v: %v", ins, err)
 	}
 }
@@ -1194,6 +1222,14 @@ func validateRVV(ctxt *obj.Link, ins *instruction) {
 
 func validateRVVi(ctxt *obj.Link, ins *instruction) {
 	wantImmI(ctxt, ins, ins.imm, 5)
+	wantVectorReg(ctxt, ins, "rd", ins.rd)
+	wantNoneReg(ctxt, ins, "rs1", ins.rs1)
+	wantVectorReg(ctxt, ins, "rs2", ins.rs2)
+	wantNoneReg(ctxt, ins, "rs3", ins.rs3)
+}
+
+func validateRVVu(ctxt *obj.Link, ins *instruction) {
+	wantImmU(ctxt, ins, ins.imm, 5)
 	wantVectorReg(ctxt, ins, "rd", ins.rd)
 	wantNoneReg(ctxt, ins, "rs1", ins.rs1)
 	wantVectorReg(ctxt, ins, "rs2", ins.rs2)
@@ -1379,6 +1415,10 @@ func encodeRVV2(ins *instruction) uint32 {
 
 func encodeRVVi(ins *instruction) uint32 {
 	return encodeR(ins.as, immI(ins.as, ins.imm, 5), regV(ins.rs2), regV(ins.rd), ins.funct3, ins.funct7)
+}
+
+func encodeRVVu(ins *instruction) uint32 {
+	return encodeR(ins.as, immU(ins.as, ins.imm, 5), regV(ins.rs2), regV(ins.rd), ins.funct3, ins.funct7)
 }
 
 func encodeRVIV(ins *instruction) uint32 {
@@ -1614,6 +1654,7 @@ var (
 	rFFEncoding   = encoding{encode: encodeRFF, validate: validateRFF, length: 4}
 	rVV2Encoding  = encoding{encode: encodeRVV2, validate: validateRVV, length: 4}
 	rVViEncoding  = encoding{encode: encodeRVVi, validate: validateRVVi, length: 4}
+	rVVuEncoding  = encoding{encode: encodeRVVu, validate: validateRVVu, length: 4}
 	rVIVEncoding  = encoding{encode: encodeRVIV, validate: validateRVIV, length: 4}
 	rVVVEncoding  = encoding{encode: encodeRVVV, validate: validateRVVV, length: 4}
 
@@ -1968,6 +2009,17 @@ var encodings = [ALAST & obj.AMask]encoding{
 	AVXORVV & obj.AMask: rVVVEncoding,
 	AVXORVX & obj.AMask: rVIVEncoding,
 	AVXORVI & obj.AMask: rVViEncoding,
+
+	// 31.11.6. Vector Single-Width Shift Instructions
+	AVSLLVV & obj.AMask: rVVVEncoding,
+	AVSLLVX & obj.AMask: rVIVEncoding,
+	AVSLLVI & obj.AMask: rVViEncoding,
+	AVSRLVV & obj.AMask: rVVVEncoding,
+	AVSRLVX & obj.AMask: rVIVEncoding,
+	AVSRLVI & obj.AMask: rVViEncoding,
+	AVSRAVV & obj.AMask: rVVVEncoding,
+	AVSRAVX & obj.AMask: rVIVEncoding,
+	AVSRAVI & obj.AMask: rVViEncoding,
 
 	// Escape hatch
 	AWORD & obj.AMask: rawEncoding,
@@ -2715,12 +2767,19 @@ func instructionsForProg(p *obj.Prog) []*instruction {
 
 	case AVADDVV, AVADDVX, AVSUBVV, AVSUBVX, AVRSUBVX, AVWADDUVV, AVWADDUVX, AVWSUBUVV, AVWSUBUVX,
 		AVWADDVV, AVWADDVX, AVWSUBVV, AVWSUBVX, AVWADDUWV, AVWADDUWX, AVWSUBUWV, AVWSUBUWX,
-		AVWADDWV, AVWADDWX, AVWSUBWV, AVWSUBWX, AVANDVV, AVANDVX, AVORVV, AVORVX, AVXORVV, AVXORVX:
+		AVWADDWV, AVWADDWX, AVWSUBWV, AVWSUBWX, AVANDVV, AVANDVX, AVORVV, AVORVX, AVXORVV, AVXORVX,
+		AVSLLVV, AVSLLVX, AVSRLVV, AVSRLVX, AVSRAVV, AVSRAVX:
 		// Set mask bit
 		// TODO(jsing): make this configurable via instruction
 		ins.funct7 |= 1
 
 	case AVADDVI, AVRSUBVI, AVANDVI, AVORVI, AVXORVI:
+		// Set mask bit
+		// TODO(jsing): make this configurable via instruction
+		ins.funct7 |= 1
+		ins.rd, ins.rs1, ins.rs2 = uint32(p.To.Reg), obj.REG_NONE, uint32(p.Reg)
+
+	case AVSLLVI, AVSRLVI, AVSRAVI:
 		// Set mask bit
 		// TODO(jsing): make this configurable via instruction
 		ins.funct7 |= 1

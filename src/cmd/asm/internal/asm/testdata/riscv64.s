@@ -494,6 +494,17 @@ start:
 	VXORVX		V4, X11, V2			// 57c1452e
 	VXORVI		$15, V4, V2			// 57b1472e
 
+	// 31.11.6. Vector Single-Width Shift Instructions
+	VSLLVV		V4, V1, V2			// 57814096
+	VSLLVX		V4, X11, V2			// 57c14596
+	VSLLVI		$15, V4, V2			// 57b14796
+	VSRLVV		V4, V1, V2			// 578140a2
+	VSRLVX		V4, X11, V2			// 57c145a2
+	VSRLVI		$15, V4, V2			// 57b147a2
+	VSRAVV		V4, V1, V2			// 578140a6
+	VSRAVX		V4, X11, V2			// 57c145a6
+	VSRAVI		$15, V4, V2			// 57b147a6
+
 	// Privileged ISA
 
 	// 3.2.1: Environment Call and Breakpoint
