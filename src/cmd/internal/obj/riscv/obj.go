@@ -1958,6 +1958,17 @@ var encodings = [ALAST & obj.AMask]encoding{
 	AVZEXTVF8 & obj.AMask: rVV2Encoding,
 	AVSEXTVF8 & obj.AMask: rVV2Encoding,
 
+	// 31.11.5. Vector Bitwise Logical Instructions
+	AVANDVV & obj.AMask: rVVVEncoding,
+	AVANDVX & obj.AMask: rVIVEncoding,
+	AVANDVI & obj.AMask: rVViEncoding,
+	AVORVV & obj.AMask:  rVVVEncoding,
+	AVORVX & obj.AMask:  rVIVEncoding,
+	AVORVI & obj.AMask:  rVViEncoding,
+	AVXORVV & obj.AMask: rVVVEncoding,
+	AVXORVX & obj.AMask: rVIVEncoding,
+	AVXORVI & obj.AMask: rVViEncoding,
+
 	// Escape hatch
 	AWORD & obj.AMask: rawEncoding,
 
@@ -2704,12 +2715,12 @@ func instructionsForProg(p *obj.Prog) []*instruction {
 
 	case AVADDVV, AVADDVX, AVSUBVV, AVSUBVX, AVRSUBVX, AVWADDUVV, AVWADDUVX, AVWSUBUVV, AVWSUBUVX,
 		AVWADDVV, AVWADDVX, AVWSUBVV, AVWSUBVX, AVWADDUWV, AVWADDUWX, AVWSUBUWV, AVWSUBUWX,
-		AVWADDWV, AVWADDWX, AVWSUBWV, AVWSUBWX:
+		AVWADDWV, AVWADDWX, AVWSUBWV, AVWSUBWX, AVANDVV, AVANDVX, AVORVV, AVORVX, AVXORVV, AVXORVX:
 		// Set mask bit
 		// TODO(jsing): make this configurable via instruction
 		ins.funct7 |= 1
 
-	case AVADDVI, AVRSUBVI:
+	case AVADDVI, AVRSUBVI, AVANDVI, AVORVI, AVXORVI:
 		// Set mask bit
 		// TODO(jsing): make this configurable via instruction
 		ins.funct7 |= 1

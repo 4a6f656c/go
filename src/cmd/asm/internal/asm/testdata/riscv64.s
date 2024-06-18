@@ -481,6 +481,19 @@ start:
 	VZEXTVF8	V4, V2				// 5721414a
 	VSEXTVF8	V4, V2				// 57a1414a
 
+	// 31.11.4. Vector Integer Add-with-Carry / Subtract-with-Borrow Instructions
+
+	// 31.11.5. Vector Bitwise Logical Instructions
+	VANDVV		V4, V1, V2			// 57814026
+	VANDVX		V4, X11, V2			// 57c14526
+	VANDVI		$15, V4, V2			// 57b14726
+	VORVV		V4, V1, V2			// 5781402a
+	VORVX		V4, X11, V2			// 57c1452a
+	VORVI		$15, V4, V2			// 57b1472a
+	VXORVV		V4, V1, V2			// 5781402e
+	VXORVX		V4, X11, V2			// 57c1452e
+	VXORVI		$15, V4, V2			// 57b1472e
+
 	// Privileged ISA
 
 	// 3.2.1: Environment Call and Breakpoint
