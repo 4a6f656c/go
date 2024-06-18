@@ -46,4 +46,8 @@ TEXT errors(SB),$0
 	SRLI	$1, X5, F1			// ERROR "expected integer register in rd position but got non-integer register F1"
 	SRLI	$1, F1, X5			// ERROR "expected integer register in rs1 position but got non-integer register F1"
 	FNES	F1, (X5)			// ERROR "needs an integer register output"
+	VADDVI	$16, V4, V2			// ERROR "signed immediate 16 must be in range [-16, 15] (5 bits)"
+	VADDVI	$-17, V4, V2			// ERROR "signed immediate -17 must be in range [-16, 15] (5 bits)"
+	VRSUBVI	$16, V4, V2			// ERROR "signed immediate 16 must be in range [-16, 15] (5 bits)"
+	VRSUBVI	$-17, V4, V2			// ERROR "signed immediate -17 must be in range [-16, 15] (5 bits)"
 	RET

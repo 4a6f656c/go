@@ -444,6 +444,16 @@ start:
 	VS4RV		V4, (X11)			// 27828562
 	VS8RV		V8, (X11)			// 278485e2
 
+	VADDVV		V4, V1, V2			// 57814002
+	VADDVX		V4, X11, V2			// 57c14502
+	VADDVI		$15, V4, V2			// 57b14702
+	VADDVI		$-16, V4, V2			// 57314802
+	VSUBVV		V4, V1, V2			// 5781400a
+	VSUBVX		V4, X11, V2			// 57c1450a
+	VRSUBVX		V4, X11, V2			// 57c1450e
+	VRSUBVI		$15, V4, V2			// 57b1470e
+	VRSUBVI		$-16, V4, V2			// 5731480e
+
 	// Privileged ISA
 
 	// 3.2.1: Environment Call and Breakpoint
