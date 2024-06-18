@@ -1185,6 +1185,13 @@ func validateRFF(ctxt *obj.Link, ins *instruction) {
 	wantNoneReg(ctxt, ins, "rs3", ins.rs3)
 }
 
+func validateRVV(ctxt *obj.Link, ins *instruction) {
+	wantVectorReg(ctxt, ins, "rd", ins.rd)
+	wantNoneReg(ctxt, ins, "rs1", ins.rs1)
+	wantVectorReg(ctxt, ins, "rs2", ins.rs2)
+	wantNoneReg(ctxt, ins, "rs3", ins.rs3)
+}
+
 func validateRVVi(ctxt *obj.Link, ins *instruction) {
 	wantImmI(ctxt, ins, ins.imm, 5)
 	wantVectorReg(ctxt, ins, "rd", ins.rd)
@@ -1305,11 +1312,15 @@ func encodeR(as obj.As, rs1, rs2, rd, funct3, funct7 uint32) uint32 {
 	if enc == nil {
 		panic("encodeR: could not encode instruction")
 	}
+	if enc.rs1 != 0 && rs1 != 0 {
+		panic("encodeR: instruction uses rs1, but rs1 is nonzero")
+	}
 	if enc.rs2 != 0 && rs2 != 0 {
-		panic("encodeR: instruction uses rs2, but rs2 was nonzero")
+		panic("encodeR: instruction uses rs2, but rs2 is nonzero")
 	}
 	funct3 |= enc.funct3
 	funct7 |= enc.funct7
+	rs1 |= enc.rs1
 	rs2 |= enc.rs2
 	return funct7<<25 | rs2<<20 | rs1<<15 | funct3<<12 | rd<<7 | enc.opcode
 }
@@ -1360,6 +1371,10 @@ func encodeRIF(ins *instruction) uint32 {
 
 func encodeRFF(ins *instruction) uint32 {
 	return encodeR(ins.as, regF(ins.rs2), 0, regF(ins.rd), ins.funct3, ins.funct7)
+}
+
+func encodeRVV2(ins *instruction) uint32 {
+	return encodeR(ins.as, 0, regV(ins.rs2), regV(ins.rd), ins.funct3, ins.funct7)
 }
 
 func encodeRVVi(ins *instruction) uint32 {
@@ -1597,13 +1612,14 @@ var (
 	rFIEncoding   = encoding{encode: encodeRFI, validate: validateRFI, length: 4}
 	rIFEncoding   = encoding{encode: encodeRIF, validate: validateRIF, length: 4}
 	rFFEncoding   = encoding{encode: encodeRFF, validate: validateRFF, length: 4}
-	rVViEncoding = encoding{encode: encodeRVVi, validate: validateRVVi, length: 4}
+	rVV2Encoding  = encoding{encode: encodeRVV2, validate: validateRVV, length: 4}
+	rVViEncoding  = encoding{encode: encodeRVVi, validate: validateRVVi, length: 4}
 	rVIVEncoding  = encoding{encode: encodeRVIV, validate: validateRVIV, length: 4}
 	rVVVEncoding  = encoding{encode: encodeRVVV, validate: validateRVVV, length: 4}
 
-	iIEncoding  = encoding{encode: encodeII, validate: validateII, length: 4}
-	iFEncoding  = encoding{encode: encodeIF, validate: validateIF, length: 4}
-	iVEncoding  = encoding{encode: encodeIV, validate: validateIV, length: 4}
+	iIEncoding = encoding{encode: encodeII, validate: validateII, length: 4}
+	iFEncoding = encoding{encode: encodeIF, validate: validateIF, length: 4}
+	iVEncoding = encoding{encode: encodeIV, validate: validateIV, length: 4}
 
 	sIEncoding = encoding{encode: encodeSI, validate: validateSI, length: 4}
 	sFEncoding = encoding{encode: encodeSF, validate: validateSF, length: 4}
@@ -1933,6 +1949,14 @@ var encodings = [ALAST & obj.AMask]encoding{
 	AVWADDWX & obj.AMask:  rVIVEncoding,
 	AVWSUBWV & obj.AMask:  rVVVEncoding,
 	AVWSUBWX & obj.AMask:  rVIVEncoding,
+
+	// 31.11.3. Vector Integer Extension
+	AVZEXTVF2 & obj.AMask: rVV2Encoding,
+	AVSEXTVF2 & obj.AMask: rVV2Encoding,
+	AVZEXTVF4 & obj.AMask: rVV2Encoding,
+	AVSEXTVF4 & obj.AMask: rVV2Encoding,
+	AVZEXTVF8 & obj.AMask: rVV2Encoding,
+	AVSEXTVF8 & obj.AMask: rVV2Encoding,
 
 	// Escape hatch
 	AWORD & obj.AMask: rawEncoding,
@@ -2690,6 +2714,11 @@ func instructionsForProg(p *obj.Prog) []*instruction {
 		// TODO(jsing): make this configurable via instruction
 		ins.funct7 |= 1
 		ins.rd, ins.rs1, ins.rs2 = uint32(p.To.Reg), obj.REG_NONE, uint32(p.Reg)
+
+	case AVZEXTVF2, AVSEXTVF2, AVZEXTVF4, AVSEXTVF4, AVZEXTVF8, AVSEXTVF8:
+		// Set mask bit
+		// TODO(jsing): make this configurable via instruction
+		ins.funct7 |= 1
 	}
 
 	for _, ins := range inss {

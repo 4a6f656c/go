@@ -473,6 +473,14 @@ start:
 	VWSUBWV		V4, V1, V2			// 57a140de
 	VWSUBWX		V4, X11, V2			// 57e145de
 
+	// 31.11.3. Vector Integer Extension
+	VZEXTVF2	V4, V2				// 5721434a
+	VSEXTVF2	V4, V2				// 57a1434a
+	VZEXTVF4	V4, V2				// 5721424a
+	VSEXTVF4	V4, V2				// 57a1424a
+	VZEXTVF8	V4, V2				// 5721414a
+	VSEXTVF8	V4, V2				// 57a1414a
+
 	// Privileged ISA
 
 	// 3.2.1: Environment Call and Breakpoint
