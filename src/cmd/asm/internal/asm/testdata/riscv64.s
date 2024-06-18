@@ -444,6 +444,7 @@ start:
 	VS4RV		V4, (X11)			// 27828562
 	VS8RV		V8, (X11)			// 278485e2
 
+	// 31.11.1. Vector Single-Width Integer Add and Subtract
 	VADDVV		V4, V1, V2			// 57814002
 	VADDVX		V4, X11, V2			// 57c14502
 	VADDVI		$15, V4, V2			// 57b14702
@@ -453,6 +454,24 @@ start:
 	VRSUBVX		V4, X11, V2			// 57c1450e
 	VRSUBVI		$15, V4, V2			// 57b1470e
 	VRSUBVI		$-16, V4, V2			// 5731480e
+
+	// 31.11.2. Vector Widening Integer Add/Subtract
+	VWADDUVV	V4, V1, V2			// 57a140c2
+	VWADDUVX	V4, X11, V2			// 57e145c2
+	VWSUBUVV	V4, V1, V2			// 57a140ca
+	VWSUBUVX	V4, X11, V2			// 57e145ca
+	VWADDVV		V4, V1, V2			// 57a140c6
+	VWADDVX		V4, X11, V2			// 57e145c6
+	VWSUBVV		V4, V1, V2			// 57a140ce
+	VWSUBVX		V4, X11, V2			// 57e145ce
+	VWADDUWV	V4, V1, V2			// 57a140d2
+	VWADDUWX	V4, X11, V2			// 57e145d2
+	VWSUBUWV	V4, V1, V2			// 57a140da
+	VWSUBUWX	V4, X11, V2			// 57e145da
+	VWADDWV		V4, V1, V2			// 57a140d6
+	VWADDWX		V4, X11, V2			// 57e145d6
+	VWSUBWV		V4, V1, V2			// 57a140de
+	VWSUBWX		V4, X11, V2			// 57e145de
 
 	// Privileged ISA
 

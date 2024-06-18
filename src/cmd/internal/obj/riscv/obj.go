@@ -1907,8 +1907,6 @@ var encodings = [ALAST & obj.AMask]encoding{
 	AVS4RV & obj.AMask: sVEncoding,
 	AVS8RV & obj.AMask: sVEncoding,
 
-	// 31.10.2. Widening Vector Arithmetic Instructions
-
 	// 31.11.1. Vector Single-Width Integer Add and Subtract
 	AVADDVV & obj.AMask:  rVVVEncoding,
 	AVADDVX & obj.AMask:  rVIVEncoding,
@@ -1917,6 +1915,24 @@ var encodings = [ALAST & obj.AMask]encoding{
 	AVSUBVX & obj.AMask:  rVIVEncoding,
 	AVRSUBVX & obj.AMask: rVIVEncoding,
 	AVRSUBVI & obj.AMask: rVViEncoding,
+
+	// 31.11.2. Vector Widening Integer Add/Subtract
+	AVWADDUVV & obj.AMask: rVVVEncoding,
+	AVWADDUVX & obj.AMask: rVIVEncoding,
+	AVWSUBUVV & obj.AMask: rVVVEncoding,
+	AVWSUBUVX & obj.AMask: rVIVEncoding,
+	AVWADDVV & obj.AMask:  rVVVEncoding,
+	AVWADDVX & obj.AMask:  rVIVEncoding,
+	AVWSUBVV & obj.AMask:  rVVVEncoding,
+	AVWSUBVX & obj.AMask:  rVIVEncoding,
+	AVWADDUWV & obj.AMask: rVVVEncoding,
+	AVWADDUWX & obj.AMask: rVIVEncoding,
+	AVWSUBUWV & obj.AMask: rVVVEncoding,
+	AVWSUBUWX & obj.AMask: rVIVEncoding,
+	AVWADDWV & obj.AMask:  rVVVEncoding,
+	AVWADDWX & obj.AMask:  rVIVEncoding,
+	AVWSUBWV & obj.AMask:  rVVVEncoding,
+	AVWSUBWX & obj.AMask:  rVIVEncoding,
 
 	// Escape hatch
 	AWORD & obj.AMask: rawEncoding,
@@ -2662,7 +2678,9 @@ func instructionsForProg(p *obj.Prog) []*instruction {
 	case AVS1RV, AVS2RV, AVS4RV, AVS8RV:
 		ins.rd, ins.rs1, ins.rs2 = uint32(p.To.Reg), uint32(p.From.Reg), obj.REG_NONE
 
-	case AVADDVV, AVADDVX, AVSUBVV, AVSUBVX, AVRSUBVX:
+	case AVADDVV, AVADDVX, AVSUBVV, AVSUBVX, AVRSUBVX, AVWADDUVV, AVWADDUVX, AVWSUBUVV, AVWSUBUVX,
+		AVWADDVV, AVWADDVX, AVWSUBVV, AVWSUBVX, AVWADDUWV, AVWADDUWX, AVWSUBUWV, AVWSUBUWX,
+		AVWADDWV, AVWADDWX, AVWSUBWV, AVWSUBWX:
 		// Set mask bit
 		// TODO(jsing): make this configurable via instruction
 		ins.funct7 |= 1
