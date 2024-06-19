@@ -537,6 +537,16 @@ start:
 	VMAXVV		V4, V1, V2			// 5781401e
 	VMAXVX		V4, X11, V2			// 57c1451e
 
+	// 31.11.10. Vector Single-Width Integer Multiply Instructions
+	VMULVV		V4, V1, V2			// 57a14096
+	VMULVX		V4, X11, V2			// 57e14596
+	VMULHVV		V4, V1, V2			// 57a1409e
+	VMULHVX		V4, X11, V2			// 57e1459e
+	VMULHUVV	V4, V1, V2			// 57a14092
+	VMULHUVX	V4, X11, V2			// 57e14592
+	VMULHSUVV	V4, V1, V2			// 57a1409a
+	VMULHSUVX	V4, X11, V2			// 57e1459a
+
 	// Privileged ISA
 
 	// 3.2.1: Environment Call and Breakpoint
