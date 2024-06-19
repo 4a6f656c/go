@@ -2021,6 +2021,28 @@ var encodings = [ALAST & obj.AMask]encoding{
 	AVSRAVX & obj.AMask: rVIVEncoding,
 	AVSRAVI & obj.AMask: rVViEncoding,
 
+	// 31.11.8. Vector Integer Compare Instructions
+	AVMSEQVV & obj.AMask:  rVVVEncoding,
+	AVMSEQVX & obj.AMask:  rVIVEncoding,
+	AVMSEQVI & obj.AMask:  rVViEncoding,
+	AVMSNEVV & obj.AMask:  rVVVEncoding,
+	AVMSNEVX & obj.AMask:  rVIVEncoding,
+	AVMSNEVI & obj.AMask:  rVViEncoding,
+	AVMSLTUVV & obj.AMask: rVVVEncoding,
+	AVMSLTUVX & obj.AMask: rVIVEncoding,
+	AVMSLTVV & obj.AMask:  rVVVEncoding,
+	AVMSLTVX & obj.AMask:  rVIVEncoding,
+	AVMSLEUVV & obj.AMask: rVVVEncoding,
+	AVMSLEUVX & obj.AMask: rVIVEncoding,
+	AVMSLEUVI & obj.AMask: rVViEncoding,
+	AVMSLEVV & obj.AMask:  rVVVEncoding,
+	AVMSLEVX & obj.AMask:  rVIVEncoding,
+	AVMSLEVI & obj.AMask:  rVViEncoding,
+	AVMSGTUVX & obj.AMask: rVIVEncoding,
+	AVMSGTUVI & obj.AMask: rVViEncoding,
+	AVMSGTVX & obj.AMask:  rVIVEncoding,
+	AVMSGTVI & obj.AMask:  rVViEncoding,
+
 	// Escape hatch
 	AWORD & obj.AMask: rawEncoding,
 
@@ -2773,7 +2795,14 @@ func instructionsForProg(p *obj.Prog) []*instruction {
 		// TODO(jsing): make this configurable via instruction
 		ins.funct7 |= 1
 
-	case AVADDVI, AVRSUBVI, AVANDVI, AVORVI, AVXORVI:
+	case AVMSEQVV, AVMSEQVX, AVMSNEVV, AVMSNEVX, AVMSLTUVV, AVMSLTUVX, AVMSLTVV, AVMSLTVX,
+		AVMSLEUVV, AVMSLEUVX, AVMSLEVV, AVMSLEVX, AVMSGTUVX, AVMSGTVX:
+		// Set mask bit
+		// TODO(jsing): make this configurable via instruction
+		ins.funct7 |= 1
+
+	case AVADDVI, AVRSUBVI, AVANDVI, AVORVI, AVXORVI,
+		AVMSEQVI, AVMSNEVI, AVMSLEUVI, AVMSLEVI, AVMSGTUVI, AVMSGTVI:
 		// Set mask bit
 		// TODO(jsing): make this configurable via instruction
 		ins.funct7 |= 1
