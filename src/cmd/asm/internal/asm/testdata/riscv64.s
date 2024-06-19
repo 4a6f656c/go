@@ -557,6 +557,14 @@ start:
 	VREMVV		V4, V1, V2			// 57a1408e
 	VREMVX		V4, X11, V2			// 57e1458e
 
+	// 31.11.12. Vector Widening Integer Multiply Instructions
+	VWMULVV		V4, V1, V2			// 57a140ee
+	VWMULVX		V4, X11, V2			// 57e145ee
+	VWMULUVV	V4, V1, V2			// 57a140e2
+	VWMULUVX	V4, X11, V2			// 57e145e2
+	VWMULSUVV	V4, V1, V2			// 57a140ea
+	VWMULSUVX	V4, X11, V2			// 57e145ea
+
 	// Privileged ISA
 
 	// 3.2.1: Environment Call and Breakpoint
