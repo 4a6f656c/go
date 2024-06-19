@@ -547,6 +547,16 @@ start:
 	VMULHSUVV	V4, V1, V2			// 57a1409a
 	VMULHSUVX	V4, X11, V2			// 57e1459a
 
+	// 31.11.11. Vector Integer Divide Instructions
+	VDIVUVV		V4, V1, V2			// 57a14082
+	VDIVUVX		V4, X11, V2			// 57e14582
+	VDIVVV		V4, V1, V2			// 57a14086
+	VDIVVX		V4, X11, V2			// 57e14586
+	VREMUVV		V4, V1, V2			// 57a1408a
+	VREMUVX		V4, X11, V2			// 57e1458a
+	VREMVV		V4, V1, V2			// 57a1408e
+	VREMVX		V4, X11, V2			// 57e1458e
+
 	// Privileged ISA
 
 	// 3.2.1: Environment Call and Breakpoint

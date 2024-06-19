@@ -2063,6 +2063,16 @@ var encodings = [ALAST & obj.AMask]encoding{
 	AVMULHSUVV & obj.AMask: rVVVEncoding,
 	AVMULHSUVX & obj.AMask: rVIVEncoding,
 
+	// 31.11.11. Vector Integer Divide Instructions
+	AVDIVUVV & obj.AMask: rVVVEncoding,
+	AVDIVUVX & obj.AMask: rVIVEncoding,
+	AVDIVVV & obj.AMask:  rVVVEncoding,
+	AVDIVVX & obj.AMask:  rVIVEncoding,
+	AVREMUVV & obj.AMask: rVVVEncoding,
+	AVREMUVX & obj.AMask: rVIVEncoding,
+	AVREMVV & obj.AMask:  rVVVEncoding,
+	AVREMVX & obj.AMask:  rVIVEncoding,
+
 	// Escape hatch
 	AWORD & obj.AMask: rawEncoding,
 
@@ -2822,7 +2832,8 @@ func instructionsForProg(p *obj.Prog) []*instruction {
 		ins.funct7 |= 1
 
 	case AVMINUVV, AVMINUVX, AVMINVV, AVMINVX, AVMAXUVV, AVMAXUVX, AVMAXVV, AVMAXVX,
-		AVMULVV, AVMULVX, AVMULHVV, AVMULHVX, AVMULHUVV, AVMULHUVX, AVMULHSUVV, AVMULHSUVX:
+		AVMULVV, AVMULVX, AVMULHVV, AVMULHVX, AVMULHUVV, AVMULHUVX, AVMULHSUVV, AVMULHSUVX,
+		AVDIVUVV, AVDIVUVX, AVDIVVV, AVDIVVX, AVREMUVV, AVREMUVX, AVREMVV, AVREMVX:
 		// Set mask bit
 		// TODO(jsing): make this configurable via instruction
 		ins.funct7 |= 1
