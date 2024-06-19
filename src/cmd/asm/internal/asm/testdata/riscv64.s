@@ -527,6 +527,16 @@ start:
 	VMSGTVX		V4, X11, V2			// 57c1457e
 	VMSGTVI		$15, V4, V2			// 57b1477e
 
+	// 31.11.9. Vector Integer Min/Max Instructions
+	VMINUVV		V4, V1, V2			// 57814012
+	VMINUVX		V4, X11, V2			// 57c14512
+	VMINVV		V4, V1, V2			// 57814016
+	VMINVX		V4, X11, V2			// 57c14516
+	VMAXUVV		V4, V1, V2			// 5781401a
+	VMAXUVX		V4, X11, V2			// 57c1451a
+	VMAXVV		V4, V1, V2			// 5781401e
+	VMAXVX		V4, X11, V2			// 57c1451e
+
 	// Privileged ISA
 
 	// 3.2.1: Environment Call and Breakpoint
