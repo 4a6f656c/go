@@ -520,6 +520,14 @@ start:
 	VSRAVX		V4, X11, V2			// 57c145a6
 	VSRAVI		$15, V4, V2			// 57b147a6
 
+	// 31.11.7. Vector Narrowing Integer Right Shift Instructions
+	VNSRLWV		V4, V1, V2			// 578140b2
+	VNSRLWX		V4, X11, V2			// 57c145b2
+	VNSRLWI		$31, V4, V2			// 57b14fb2
+	VNSRAWV		V4, V1, V2			// 578140b6
+	VNSRAWX		V4, X11, V2			// 57c145b6
+	VNSRAWI		$31, V4, V2			// 57b14fb6
+
 	// 31.11.8. Vector Integer Compare Instructions
 	VMSEQVV		V4, V1, V2			// 57814062
 	VMSEQVX		V4, X11, V2			// 57c14562

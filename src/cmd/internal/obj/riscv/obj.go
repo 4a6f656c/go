@@ -2068,6 +2068,14 @@ var encodings = [ALAST & obj.AMask]encoding{
 	AVSRAVX & obj.AMask: rVIVEncoding,
 	AVSRAVI & obj.AMask: rVViEncoding,
 
+	// 31.11.7. Vector Narrowing Integer Right Shift Instructions
+	AVNSRLWV & obj.AMask: rVVVEncoding,
+	AVNSRLWX & obj.AMask: rVIVEncoding,
+	AVNSRLWI & obj.AMask: rVVuEncoding,
+	AVNSRAWV & obj.AMask: rVVVEncoding,
+	AVNSRAWX & obj.AMask: rVIVEncoding,
+	AVNSRAWI & obj.AMask: rVVuEncoding,
+
 	// 31.11.8. Vector Integer Compare Instructions
 	AVMSEQVV & obj.AMask:  rVVVEncoding,
 	AVMSEQVX & obj.AMask:  rVIVEncoding,
@@ -2894,7 +2902,8 @@ func instructionsForProg(p *obj.Prog) []*instruction {
 	case AVMINUVV, AVMINUVX, AVMINVV, AVMINVX, AVMAXUVV, AVMAXUVX, AVMAXVV, AVMAXVX,
 		AVMULVV, AVMULVX, AVMULHVV, AVMULHVX, AVMULHUVV, AVMULHUVX, AVMULHSUVV, AVMULHSUVX,
 		AVDIVUVV, AVDIVUVX, AVDIVVV, AVDIVVX, AVREMUVV, AVREMUVX, AVREMVV, AVREMVX,
-		AVWMULVV, AVWMULVX, AVWMULUVV, AVWMULUVX, AVWMULSUVV, AVWMULSUVX:
+		AVWMULVV, AVWMULVX, AVWMULUVV, AVWMULUVX, AVWMULSUVV, AVWMULSUVX,
+		AVNSRLWV, AVNSRLWX, AVNSRAWV, AVNSRAWX:
 		// Set mask bit
 		// TODO(jsing): make this configurable via instruction
 		ins.funct7 |= 1
@@ -2906,7 +2915,7 @@ func instructionsForProg(p *obj.Prog) []*instruction {
 		ins.funct7 |= 1
 		ins.rd, ins.rs1, ins.rs2 = uint32(p.To.Reg), obj.REG_NONE, uint32(p.Reg)
 
-	case AVSLLVI, AVSRLVI, AVSRAVI:
+	case AVSLLVI, AVSRLVI, AVSRAVI, AVNSRLWI, AVNSRAWI:
 		// Set mask bit
 		// TODO(jsing): make this configurable via instruction
 		ins.funct7 |= 1
