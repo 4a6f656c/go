@@ -565,6 +565,13 @@ start:
 	VWMULSUVV	V4, V1, V2			// 57a140ea
 	VWMULSUVX	V4, X11, V2			// 57e145ea
 
+	// XXX
+
+	// 31.11.16. Vector Integer Move Instructions
+	VMVVV		V4, V2				// 5701025e
+	VMVVX		X11, V2				// 57c1055e
+	VMVVI		$15, V2				// 57b1075e
+
 	// Privileged ISA
 
 	// 3.2.1: Environment Call and Breakpoint
