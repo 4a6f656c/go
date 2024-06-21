@@ -588,7 +588,15 @@ start:
 	VWMULSUVV	V4, V1, V2			// 57a140ea
 	VWMULSUVX	V4, X11, V2			// 57e145ea
 
-	// XXX
+	// 31.11.13. Vector Single-Width Integer Multiply-Add Instructions
+	VMACCVV		V4, V1, V2			// 572112b6
+	VMACCVX		X11, V4, V2			// 57e145b6
+	VNMSACVV	V4, V1, V2			// 572112be
+	VNMSACVX	X11, V4, V2			// 57e145be
+	VMADDVV		V4, V1, V2			// 572112a6
+	VMADDVX		X11, V4, V2			// 57e145a6
+	VNMSUBVV	V4, V1, V2			// 572112ae
+	VNMSUBVX	X11, V4, V2			// 57e145ae
 
 	// 31.11.16. Vector Integer Move Instructions
 	VMVVV		V4, V2				// 5701025e

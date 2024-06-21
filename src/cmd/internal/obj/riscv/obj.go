@@ -2136,6 +2136,16 @@ var encodings = [ALAST & obj.AMask]encoding{
 	AVWMULSUVV & obj.AMask: rVVVEncoding,
 	AVWMULSUVX & obj.AMask: rVIVEncoding,
 
+	// 31.11.13. Vector Single-Width Integer Multiply-Add Instructions
+	AVMACCVV & obj.AMask:  rVVVEncoding,
+	AVMACCVX & obj.AMask:  rVIVEncoding,
+	AVNMSACVV & obj.AMask: rVVVEncoding,
+	AVNMSACVX & obj.AMask: rVIVEncoding,
+	AVMADDVV & obj.AMask:  rVVVEncoding,
+	AVMADDVX & obj.AMask:  rVIVEncoding,
+	AVNMSUBVV & obj.AMask: rVVVEncoding,
+	AVNMSUBVX & obj.AMask: rVIVEncoding,
+
 	// 31.11.16. Vector Integer Move Instructions
 	AVMVVV & obj.AMask: rVVEncoding,
 	AVMVVX & obj.AMask: rVIEncoding,
@@ -2927,7 +2937,6 @@ func instructionsForProg(p *obj.Prog) []*instruction {
 		ins.funct7 |= 1
 
 	case AVMVVV, AVMVVX:
-	//	ins.rd, ins.rs1, ins.rs2 = uint32(p.To.Reg), uint32(p.From.Reg), obj.REG_NONE
 
 	case AVMVVI:
 		ins.rd, ins.rs1, ins.rs2 = uint32(p.To.Reg), obj.REG_NONE, uint32(p.Reg)
@@ -2940,6 +2949,12 @@ func instructionsForProg(p *obj.Prog) []*instruction {
 		// TODO(jsing): make this configurable via instruction
 		//ins.funct7 |= 1
 		ins.rd, ins.rs1, ins.rs2 = uint32(p.To.Reg), obj.REG_NONE, uint32(p.Reg)
+
+	case AVMACCVV, AVMACCVX, AVNMSACVV, AVNMSACVX, AVMADDVV, AVMADDVX, AVNMSUBVV, AVNMSUBVX:
+		// Set mask bit
+		// TODO(jsing): make this configurable via instruction
+		ins.funct7 |= 1
+		ins.rd, ins.rs1, ins.rs2 = uint32(p.To.Reg), uint32(p.From.Reg), uint32(p.Reg)
 	}
 
 	for _, ins := range inss {
