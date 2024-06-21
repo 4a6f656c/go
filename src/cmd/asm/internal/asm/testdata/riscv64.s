@@ -482,6 +482,21 @@ start:
 	VSEXTVF8	V4, V2				// 57a1414a
 
 	// 31.11.4. Vector Integer Add-with-Carry / Subtract-with-Borrow Instructions
+	VADCVVM		V4, V1, V2			// 57814040
+	VADCVXM		V4, X11, V2			// 57c14540
+	VADCVIM		$15, V4, V2			// 57b14740
+	VMADCVVM	V4, V1, V2			// 57814044
+	VMADCVXM	V4, X11, V2			// 57c14544
+	VMADCVIM	$15, V4, V2			// 57b14744
+	VMADCVV		V4, V1, V2			// 57814046
+	VMADCVX		V4, X11, V2			// 57c14546
+	VMADCVI		$15, V4, V2			// 57b14746
+	VSBCVVM		V4, V1, V2			// 57814048
+	VSBCVXM		V4, X11, V2			// 57c14548
+	VMSBCVVM	V4, V1, V2			// 5781404c
+	VMSBCVXM	V4, X11, V2			// 57c1454c
+	VMSBCVV		V4, V1, V2			// 5781404e
+	VMSBCVX		V4, X11, V2			// 57c1454e
 
 	// 31.11.5. Vector Bitwise Logical Instructions
 	VANDVV		V4, V1, V2			// 57814026

@@ -2029,6 +2029,23 @@ var encodings = [ALAST & obj.AMask]encoding{
 	AVZEXTVF8 & obj.AMask: rVV2Encoding,
 	AVSEXTVF8 & obj.AMask: rVV2Encoding,
 
+	// 31.11.4. Vector Integer Add-with-Carry / Subtract-with-Borrow Instructions
+	AVADCVVM & obj.AMask:  rVVVEncoding,
+	AVADCVXM & obj.AMask:  rVIVEncoding,
+	AVADCVIM & obj.AMask:  rVViEncoding,
+	AVMADCVVM & obj.AMask: rVVVEncoding,
+	AVMADCVXM & obj.AMask: rVIVEncoding,
+	AVMADCVIM & obj.AMask: rVViEncoding,
+	AVMADCVV & obj.AMask:  rVVVEncoding,
+	AVMADCVX & obj.AMask:  rVIVEncoding,
+	AVMADCVI & obj.AMask:  rVViEncoding,
+	AVSBCVVM & obj.AMask:  rVVVEncoding,
+	AVSBCVXM & obj.AMask:  rVIVEncoding,
+	AVMSBCVVM & obj.AMask: rVVVEncoding,
+	AVMSBCVXM & obj.AMask: rVIVEncoding,
+	AVMSBCVV & obj.AMask:  rVVVEncoding,
+	AVMSBCVX & obj.AMask:  rVIVEncoding,
+
 	// 31.11.5. Vector Bitwise Logical Instructions
 	AVANDVV & obj.AMask: rVVVEncoding,
 	AVANDVX & obj.AMask: rVIVEncoding,
@@ -2904,6 +2921,15 @@ func instructionsForProg(p *obj.Prog) []*instruction {
 	//	ins.rd, ins.rs1, ins.rs2 = uint32(p.To.Reg), uint32(p.From.Reg), obj.REG_NONE
 
 	case AVMVVI:
+		ins.rd, ins.rs1, ins.rs2 = uint32(p.To.Reg), obj.REG_NONE, uint32(p.Reg)
+
+	case AVADCVVM, AVADCVXM, AVMADCVVM, AVMADCVXM, AVMADCVV, AVMADCVX,
+		AVSBCVVM, AVSBCVXM, AVMSBCVVM, AVMSBCVXM, AVMSBCVV, AVMSBCVX:
+
+	case AVADCVIM, AVMADCVIM, AVMADCVI:
+		// Set mask bit
+		// TODO(jsing): make this configurable via instruction
+		//ins.funct7 |= 1
 		ins.rd, ins.rs1, ins.rs2 = uint32(p.To.Reg), obj.REG_NONE, uint32(p.Reg)
 	}
 
