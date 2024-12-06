@@ -14,21 +14,21 @@
 // Second, it eliminates race-related special cases from cgocall and scheduler.
 // Third, in long-term it will allow to remove cyclic runtime/race dependency on cmd/go.
 
-// A brief recap of the s390x C calling convention.
-// Arguments are passed in R2...R6, the rest is on stack.
-// Callee-saved registers are: R6...R13, R15.
-// Temporary registers are: R0...R5, R14.
+// A brief recap of the riscv C calling convention.
+// Arguments are passed in X10...X17
+// Callee-saved registers are: X8, X9, X18..X27
+// Temporary registers are: X5..X7, X28..X31
 
-// When calling racecalladdr, R1 is the call target address.
+// When calling racecalladdr, X11 is the call target address.
 
-// The race ctx, ThreadState *thr below, is passed in R2 and loaded in racecalladdr.
+// The race ctx, ThreadState *thr below, is passed in X12 and loaded in racecalladdr.
 
 // func runtime·raceread(addr uintptr)
 // Called from instrumented code.
-TEXT	runtime·raceread(SB), NOSPLIT, $0-8
+TEXT	runtime·raceread<ABIInternal>(SB), NOSPLIT, $0-8
 	// void __tsan_read(ThreadState *thr, void *addr, void *pc);
 	MOV	$__tsan_read(SB), X5
-	MOV	addr+0(FP), X11
+	MOV	X10, X11
 	MOV	X1, X12
 	JMP	racecalladdr<>(SB)
 
@@ -48,10 +48,10 @@ TEXT	runtime·racereadpc(SB), NOSPLIT, $0-24
 
 // func runtime·racewrite(addr uintptr)
 // Called from instrumented code.
-TEXT	runtime·racewrite(SB), NOSPLIT, $0-8
+TEXT	runtime·racewrite<ABIInternal>(SB), NOSPLIT, $0-8
 	// void __tsan_write(ThreadState *thr, void *addr, void *pc);
 	MOV	$__tsan_write(SB), X5
-	MOV	addr+0(FP), X11
+	MOV	X10, X11
 	MOV	X1, X12
 	JMP	racecalladdr<>(SB)
 
@@ -71,11 +71,11 @@ TEXT	runtime·racewritepc(SB), NOSPLIT, $0-24
 
 // func runtime·racereadrange(addr, size uintptr)
 // Called from instrumented code.
-TEXT	runtime·racereadrange(SB), NOSPLIT, $0-16
+TEXT	runtime·racereadrange<ABIInternal>(SB), NOSPLIT, $0-16
 	// void __tsan_read_range(ThreadState *thr, void *addr, uintptr size, void *pc);
 	MOV	$__tsan_read_range(SB), X5
-	MOV	addr+0(FP), X11
-	MOV	size+8(FP), X12
+	MOV	X11, X12
+	MOV	X10, X11
 	MOV	X1, X13
 	JMP	racecalladdr<>(SB)
 
@@ -98,11 +98,11 @@ TEXT	runtime·racereadrangepc1(SB), NOSPLIT, $0-24
 
 // func runtime·racewriterange(addr, size uintptr)
 // Called from instrumented code.
-TEXT	runtime·racewriterange(SB), NOSPLIT, $0-16
+TEXT	runtime·racewriterange<ABIInternal>(SB), NOSPLIT, $0-16
 	// void __tsan_write_range(ThreadState *thr, void *addr, uintptr size, void *pc);
 	MOV	$__tsan_write_range(SB), X5
-	MOV	addr+0(FP), X11
-	MOV	size+8(FP), X12
+	MOV	X11, X12
+	MOV	X10, X11
 	MOV	X1, X13
 	JMP	racecalladdr<>(SB)
 
@@ -126,15 +126,15 @@ TEXT	runtime·racewriterangepc1(SB), NOSPLIT, $0-24
 // If addr (X11) is out of range, do nothing. Otherwise, setup goroutine context and
 // invoke racecall. Other arguments are already set.
 TEXT	racecalladdr<>(SB), NOSPLIT, $0-0
-	MOV	runtime·racearenastart(SB), X6
-	BLT	X11, X6, data			// Before racearena start?
-	MOV	runtime·racearenaend(SB), X6
-	BLT	X11, X6, call			// Before racearena end?
+	MOV	runtime·racearenastart(SB), X7
+	BLT	X11, X7, data			// Before racearena start?
+	MOV	runtime·racearenaend(SB), X7
+	BLT	X11, X7, call			// Before racearena end?
 data:
-	MOV	runtime·racedatastart(SB), X6
-	BLT	X11, X6, ret			// Before racedata start?
-	MOV	runtime·racedataend(SB), X6
-	BGE	X11, X6, ret			// At or after racedata end?
+	MOV	runtime·racedatastart(SB), X7
+	BLT	X11, X7, ret			// Before racedata start?
+	MOV	runtime·racedataend(SB), X7
+	BGE	X11, X7, ret			// At or after racedata end?
 call:
 	MOV	g_racectx(g), X10
 	JMP	racecall<>(SB)
@@ -143,8 +143,8 @@ ret:
 
 // func runtime·racefuncenter(pc uintptr)
 // Called from instrumented code.
-TEXT	runtime·racefuncenter(SB), NOSPLIT, $0-8
-	MOV	callpc+0(FP), X11
+TEXT	runtime·racefuncenter<ABIInternal>(SB), NOSPLIT, $0-8
+	MOV	X10, X11
 	JMP	racefuncenter<>(SB)
 
 // Common code for racefuncenter
@@ -157,7 +157,7 @@ TEXT	racefuncenter<>(SB), NOSPLIT, $0-0
 
 // func runtime·racefuncexit()
 // Called from instrumented code.
-TEXT	runtime·racefuncexit(SB), NOSPLIT, $0-0
+TEXT	runtime·racefuncexit<ABIInternal>(SB), NOSPLIT, $0-0
 	// void __tsan_func_exit(ThreadState *thr);
 	MOV	$__tsan_func_exit(SB), X5
 	MOV	g_racectx(g), X10
@@ -170,12 +170,14 @@ TEXT	runtime·racefuncexit(SB), NOSPLIT, $0-0
 TEXT	sync∕atomic·LoadInt32(SB), NOSPLIT, $0-12
 	GO_ARGS
 	MOV	$__tsan_go_atomic32_load(SB), X5
-	JMP	racecallatomic<>(SB)
+	CALL	racecallatomic<>(SB)
+	RET
 
 TEXT	sync∕atomic·LoadInt64(SB), NOSPLIT, $0-16
 	GO_ARGS
 	MOV	$__tsan_go_atomic64_load(SB), X5
-	JMP	racecallatomic<>(SB)
+	CALL	racecallatomic<>(SB)
+	RET
 
 TEXT	sync∕atomic·LoadUint32(SB), NOSPLIT, $0-12
 	GO_ARGS
@@ -198,12 +200,14 @@ TEXT	sync∕atomic·LoadPointer(SB), NOSPLIT, $0-16
 TEXT	sync∕atomic·StoreInt32(SB), NOSPLIT, $0-12
 	GO_ARGS
 	MOV	$__tsan_go_atomic32_store(SB), X5
-	JMP	racecallatomic<>(SB)
+	CALL	racecallatomic<>(SB)
+	RET
 
 TEXT	sync∕atomic·StoreInt64(SB), NOSPLIT, $0-16
 	GO_ARGS
 	MOV	$__tsan_go_atomic64_store(SB), X5
-	JMP	racecallatomic<>(SB)
+	CALL	racecallatomic<>(SB)
+	RET
 
 TEXT	sync∕atomic·StoreUint32(SB), NOSPLIT, $0-12
 	GO_ARGS
@@ -222,12 +226,14 @@ TEXT	sync∕atomic·StoreUintptr(SB), NOSPLIT, $0-16
 TEXT	sync∕atomic·SwapInt32(SB), NOSPLIT, $0-20
 	GO_ARGS
 	MOV	$__tsan_go_atomic32_exchange(SB), X5
-	JMP	racecallatomic<>(SB)
+	CALL	racecallatomic<>(SB)
+	RET
 
 TEXT	sync∕atomic·SwapInt64(SB), NOSPLIT, $0-24
 	GO_ARGS
-	MOV	$__tsan_go_atomic64_exchange(SB), X10
-	JMP	racecallatomic<>(SB)
+	MOV	$__tsan_go_atomic64_exchange(SB), X5
+	CALL	racecallatomic<>(SB)
+	RET
 
 TEXT	sync∕atomic·SwapUint32(SB), NOSPLIT, $0-20
 	GO_ARGS
@@ -313,39 +319,40 @@ TEXT	racecallatomic<>(SB), NOSPLIT, $0
 	// X13 = addr of incoming arg list
 
 	// Trigger SIGSEGV early.
-	MOV	40(X2), X6	// 1st arg is addr. after two times BL, get it at 40(X2)
-	MOVB	(X6), X7	// segv here if addr is bad
+	MOV	24(X2), X6	// 1st arg is addr. after two times CALL, get it at 24(X2)
+	MOVB	(X6), X0	// segv here if addr is bad
 	// Check that addr is within [arenastart, arenaend) or within [racedatastart, racedataend).
-	MOV	runtime·racearenastart(SB), X8
-	BLT	X8, X6, racecallatomic_data
-	MOV	runtime·racearenaend(SB), X8
-	BLT	X8, X6, racecallatomic_ok
+	MOV	runtime·racearenastart(SB), X7
+	BLT	X6, X7, racecallatomic_data
+	MOV	runtime·racearenaend(SB), X7
+	BLT	X6, X7, racecallatomic_ok
 racecallatomic_data:
-	MOV	runtime·racedatastart(SB), X8
-	BLT	X8, X6, racecallatomic_ignore
-	MOV	runtime·racedataend(SB), X8
-	BGE	X8, X6, racecallatomic_ignore
+	MOV	runtime·racedatastart(SB), X7
+	BLT	X6, X7, racecallatomic_ignore
+	MOV	runtime·racedataend(SB), X7
+	BGE	X6, X7, racecallatomic_ignore
 racecallatomic_ok:
 	// Addr is within the good range, call the atomic function.
 	MOV	g_racectx(g), X10	// goroutine context
-	MOV	16(X2), X11		// caller pc
+	MOV	8(X2), X11		// caller pc
 	MOV	X1, X12			// pc
-	ADD	$40, X2, X13
+	ADD	$24, X2, X13
 	JMP	racecall<>(SB)		// does not return
 racecallatomic_ignore:
 	// Addr is outside the good range.
 	// Call __tsan_go_ignore_sync_begin to ignore synchronization during the atomic op.
 	// An attempt to synchronize on the address would cause crash.
-	MOV	X1, X18			// remember the original function
+	MOV	X1, X18			// save PC
+	MOV	X5, X19			// save target function
 	MOV	$__tsan_go_ignore_sync_begin(SB), X5
 	MOV	g_racectx(g), X10	// goroutine context
 	CALL	racecall<>(SB)
-	MOV	X18, X1			// restore the original function
+	MOV	X19, X5			// restore the target function
 	// Call the atomic function.
 	MOV	g_racectx(g), X10	// goroutine context
-	MOV	16(X2), X11		// caller pc
-	MOV	X1, X12			// pc
-	ADD	$40, X2, X13		// arguments
+	MOV	8(X2), X11		// caller pc
+	MOV	X18, X12		// pc
+	ADD	$24, X2, X13		// arguments
 	CALL	racecall<>(SB)
 	// Call __tsan_go_ignore_sync_end.
 	MOV	$__tsan_go_ignore_sync_end(SB), X5
@@ -366,36 +373,118 @@ TEXT	runtime·racecall(SB), NOSPLIT, $0-0
 	JMP	racecall<>(SB)
 
 // Switches SP to g0 stack and calls X5. Arguments are already set.
-TEXT	racecall<>(SB), NOSPLIT, $0-0
+TEXT	racecall<>(SB), NOSPLIT|NOFRAME, $0-0
+	MOV	X1, X18				// Save RA in callee save register
+	MOV	X2, X19				// Save SP in callee save register
 	CALL	runtime·save_g(SB)		// Save g for callbacks
-	MOV	X2, X8				// Save SP in callee save register
-	MOV	g, X9				// Save g in callee save register
 	MOV	g_m(g), X6
 	MOV	m_g0(X6), X7
 	BEQ	X7, g, call			// Already on g0?
-	MOV	(g_sched+gobuf_sp)(g), X2	// Switch to g0 stack
+	MOV	(g_sched+gobuf_sp)(X7), X2	// Switch to g0 stack
 call:
 	JALR	RA, (X5)			// Call C function
-	MOV	X8, X2				// Restore SP
-	RET					// Return to Go.
+	MOV	X19, X2				// Restore SP
+	JMP	(X18)				// Return to Go.
 
-// C->Go callback thunk that allows to call runtime·racesymbolize from C
-// code. racecall has only switched SP, finish g->g0 switch by setting correct
-// g. R2 contains command code, R3 contains command-specific context. See
-// racecallback for command codes.
+// C->Go callback thunk that allows to call runtime·racesymbolize from C code.
+// Direct Go->C race call has only switched SP, finish g->g0 switch by setting correct g.
+// The overall effect of Go->C->Go call chain is similar to that of mcall.
+// R0 contains command code. R1 contains command-specific context.
+// See racecallback for command codes.
 TEXT	runtime·racecallbackthunk(SB), NOSPLIT|NOFRAME, $0
-// 	STMG	R6, R15, 48(R15)		// Save non-volatile regs.
-// 	BL	runtime·load_g(SB)		// Saved by racecall.
-// 	CMPBNE	R2, $0, rest			// raceGetProcCmd?
-// 	MOVD	g_m(g), R2			// R2 = thread.
-// 	MOVD	m_p(R2), R2			// R2 = processor.
-// 	MVC	$8, p_raceprocctx(R2), (R3)	// *R3 = ThreadState *.
-// 	LMG	48(R15), R6, R15		// Restore non-volatile regs.
-// 	BR	R14				// Return to C.
-// rest:	MOVD	g_m(g), R4			// R4 = current thread.
-// 	MOVD	m_g0(R4), g			// Switch to g0.
-// 	SUB	$24, R15			// Allocate Go argument slots.
-// 	STMG	R2, R3, 8(R15)			// Fill Go frame.
-// 	BL	runtime·racecallback(SB)	// Call Go code.
-// 	LMG	72(R15), R6, R15		// Restore non-volatile regs.
-// 	BR	R14				// Return to C.
+	// Handle command raceGetProcCmd (0) here.
+	// First, code below assumes that we are on curg, while raceGetProcCmd
+	// can be executed on g0. Second, it is called frequently, so will
+	// benefit from this fast path.
+	BNEZ	X10, rest
+	MOV	X1, X5
+	MOV	g, X6
+	CALL	runtime·load_g(SB)
+	MOV	g_m(g), X7
+	MOV	m_p(X7), X7
+	MOV	p_raceprocctx(X7), X7
+	MOV	X7, (X11)
+	MOV	X6, g
+	JMP	(X5)
+rest:
+	// Save callee-save registers (X8, X9, X18..X27, F8, F9, F18..F27),
+	// since Go code will not respect this.
+	// 8(X2) and 16(X2) are for args passed to racecallback
+	SUB	$(27*8), X2
+	MOV	X1, (0*8)(X2)
+	MOV	X8, (3*8)(X2)
+	MOV	X9, (4*8)(X2)
+	MOV	X18, (5*8)(X2)
+	MOV	X19, (6*8)(X2)
+	MOV	X20, (7*8)(X2)
+	MOV	X21, (8*8)(X2)
+	MOV	X22, (9*8)(X2)
+	MOV	X23, (10*8)(X2)
+	MOV	X24, (11*8)(X2)
+	MOV	X25, (12*8)(X2)
+	MOV	X26, (13*8)(X2)
+	MOV	g, (14*8)(X2)
+	MOVF	F8, (15*8)(X2)
+	MOVF	F9, (16*8)(X2)
+	MOVF	F18, (17*8)(X2)
+	MOVF	F19, (18*8)(X2)
+	MOVF	F20, (19*8)(X2)
+	MOVF	F21, (20*8)(X2)
+	MOVF	F22, (21*8)(X2)
+	MOVF	F23, (22*8)(X2)
+	MOVF	F24, (23*8)(X2)
+	MOVF	F25, (24*8)(X2)
+	MOVF	F26, (25*8)(X2)
+	MOVF	F27, (26*8)(X2)
+
+	// Set g = g0.
+	CALL	runtime·load_g(SB)
+	MOV	g_m(g), X5
+	MOV	m_g0(X5), X6
+	BEQ	X6, g, noswitch	// branch if already on g0
+	MOV	X6, g
+
+	MOV	X10, 8(X2)	// func arg
+	MOV	X11, 16(X2)	// func arg
+	CALL	runtime·racecallback(SB)
+
+	// All registers are smashed after Go code, reload.
+	MOV	g_m(g), X5
+	MOV	m_curg(X5), g	// g = m->curg
+ret:
+	// Restore callee-save registers.
+	MOV	(0*8)(X2), X1
+	MOV	(3*8)(X2), X8
+	MOV	(4*8)(X2), X9
+	MOV	(5*8)(X2), X18
+	MOV	(6*8)(X2), X19
+	MOV	(7*8)(X2), X20
+	MOV	(8*8)(X2), X21
+	MOV	(9*8)(X2), X22
+	MOV	(10*8)(X2), X23
+	MOV	(11*8)(X2), X24
+	MOV	(12*8)(X2), X25
+	MOV	(13*8)(X2), X26
+	MOV	(14*8)(X2), g
+	MOVF	(15*8)(X2), F8
+	MOVF	(16*8)(X2), F9
+	MOVF	(17*8)(X2), F18
+	MOVF	(18*8)(X2), F19
+	MOVF	(19*8)(X2), F20
+	MOVF	(20*8)(X2), F21
+	MOVF	(21*8)(X2), F22
+	MOVF	(22*8)(X2), F23
+	MOVF	(23*8)(X2), F24
+	MOVF	(24*8)(X2), F25
+	MOVF	(25*8)(X2), F26
+	MOVF	(26*8)(X2), F27
+
+	ADD	$(27*8), X2
+	JMP	(X1)
+
+noswitch:
+	// already on g0
+	MOV	X10, 8(X2)	// func arg
+	MOV	X11, 16(X2)	// func arg
+	CALL	runtime·racecallback(SB)
+	JMP	ret

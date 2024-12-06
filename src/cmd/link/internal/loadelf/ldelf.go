@@ -602,6 +602,10 @@ func Load(l *loader.Loader, arch *sys.Arch, localSymVersion int, f *bio.Reader, 
 					// See https://sourceware.org/bugzilla/show_bug.cgi?id=21809
 					continue
 				}
+				if strings.HasPrefix(elfsym.name, "$d") && (sect.name == ".comment" || sect.name == ".debug_abbrev" || sect.name == ".debug_info" || sect.name == ".debug_line" || sect.name == ".debug_ranges" || sect.name == ".debug_str" || sect.name == ".riscv.attributes") {
+					// clang on riscv64.
+					continue
+				}
 			}
 
 			if strings.HasPrefix(elfsym.name, ".Linfo_string") {
@@ -1146,6 +1150,7 @@ func relSize(arch *sys.Arch, pn string, elftype uint32) (uint8, uint8, error) {
 		RISCV64 | uint32(elf.R_RISCV_SET32)<<16,
 		RISCV64 | uint32(elf.R_RISCV_SUB32)<<16,
 		RISCV64 | uint32(elf.R_RISCV_32_PCREL)<<16,
+		RISCV64 | uint32(elf.R_RISCV_JAL)<<16,
 		RISCV64 | uint32(elf.R_RISCV_RELAX)<<16:
 		return 4, 4, nil
 

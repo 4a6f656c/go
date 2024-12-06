@@ -518,6 +518,8 @@ func mallocinit() {
 		for i := 0x7f; i >= 0; i-- {
 			var p uintptr
 			switch {
+			case GOARCH == "riscv64":
+				p = uintptr(i)<<40 | uintptrMask&(0x002c<<32)
 			case raceenabled:
 				// The TSAN runtime requires the heap
 				// to be in the range [0x00c000000000,
@@ -704,13 +706,12 @@ func (h *mheap) sysAlloc(n uintptr, hintList **arenaHint, register bool) (v unsa
 	}
 
 	if size == 0 {
-		if raceenabled && GOOS != "riscv64" {
+		//if raceenabled && GOOS != "riscv64" {
+		if raceenabled {
 			// The race detector assumes the heap lives in
 			// [0x00c000000000, 0x00e000000000), but we
 			// just ran out of hints in this region. Give
-			// a nice failure. This does not hold true for
-			// TSAN on riscv64, in which case the heap is
-			// not tracked.
+			// a nice failure.
 			throw("too many address space collisions for -race mode")
 		}
 

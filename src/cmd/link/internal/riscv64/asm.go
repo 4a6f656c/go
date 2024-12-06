@@ -138,6 +138,11 @@ func adddynrel(target *ld.Target, ldr *loader.Loader, syms *ld.ArchSyms, s loade
 		// Ignore relaxations, at least for now.
 		return true
 
+	case objabi.ElfRelocOffset + objabi.RelocType(elf.R_RISCV_JAL):
+		su := ldr.MakeSymbolUpdater(s)
+		su.SetRelocType(rIdx, objabi.R_RISCV_JAL)
+		return true
+
 	default:
 		if r.Type() >= objabi.ElfRelocOffset {
 			ldr.Errorf(s, "unexpected relocation type %d (%s)", r.Type(), sym.RelocName(target.Arch, r.Type()))
